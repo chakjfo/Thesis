@@ -50,6 +50,7 @@ function summarizeRegion(area, populationGroup) {
     area,
     populationGroup,
     rowCount: rows.length,
+    totalRecords: state.records.length,
   };
 
   for (const [key, , column] of FACTORS) {
@@ -103,7 +104,7 @@ function renderMetrics(summary) {
 function renderResult(summary, checklist, result) {
   riskCategory.textContent = result.category;
   riskCategory.className = `risk-${result.category.toLowerCase()}`;
-  riskScore.textContent = `Screening score: ${percent(result.score)} based on ${summary.rowCount.toLocaleString()} regional records.`;
+  riskScore.textContent = `Screening score: ${percent(result.score)} using ${summary.rowCount.toLocaleString()} matching records for this region/group. Dataset total: ${summary.totalRecords.toLocaleString()} records.`;
 
   const selectedFactors = checklist.names.length > 0
     ? checklist.names.join(", ")
@@ -125,6 +126,7 @@ async function renderLlmExplanation(summary, checklist, result) {
     area: summary.area,
     populationGroup: summary.populationGroup,
     rowCount: summary.rowCount,
+    totalRecords: summary.totalRecords,
     score: result.score,
     riskCategory: result.category,
     regionalRiskScore: summary.regionalRiskScore,

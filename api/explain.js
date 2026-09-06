@@ -41,7 +41,8 @@ Input:
 - Screening risk category: ${payload.riskCategory}
 - Screening score: ${percent(payload.score)}
 - Regional background risk score: ${percent(payload.regionalRiskScore)}
-- Regional records used: ${payload.rowCount}
+- Matching records for selected region/group: ${payload.rowCount}
+- Total syntheticized dataset records: ${payload.totalRecords}
 - Selected checklist factors: ${payload.checklist?.selectedFactors?.join(", ") || "none"}
 - Strongest regional dataset factors: ${
     payload.topRegionalFactors?.map((factor) => `${factor.label} ${percent(factor.value)}`).join(", ") || "none"

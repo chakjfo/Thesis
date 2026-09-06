@@ -280,6 +280,7 @@ def evaluate_random_forest_model(model_frame: pd.DataFrame) -> dict[str, float]:
         f1_score,
         precision_score,
         recall_score,
+        roc_auc_score,
     )
     from sklearn.model_selection import train_test_split
 
@@ -307,13 +308,22 @@ def evaluate_random_forest_model(model_frame: pd.DataFrame) -> dict[str, float]:
     training_seconds = time.perf_counter() - training_start
 
     predictions = model.predict(x_test)
+    probabilities = model.predict_proba(x_test)
     labels = sorted(target.unique())
+    roc_auc_weighted_ovr = roc_auc_score(
+        y_test,
+        probabilities,
+        labels=model.classes_,
+        multi_class="ovr",
+        average="weighted",
+    )
 
     metrics = {
         "accuracy": accuracy_score(y_test, predictions),
         "precision_weighted": precision_score(y_test, predictions, average="weighted", zero_division=0),
         "recall_weighted": recall_score(y_test, predictions, average="weighted", zero_division=0),
         "f1_weighted": f1_score(y_test, predictions, average="weighted", zero_division=0),
+        "roc_auc_weighted_ovr": roc_auc_weighted_ovr,
         "training_time_seconds": training_seconds,
         "train_rows": int(len(x_train)),
         "test_rows": int(len(x_test)),
@@ -366,8 +376,87 @@ def evaluate_random_forest_model(model_frame: pd.DataFrame) -> dict[str, float]:
         "importance": model.feature_importances_,
     }).sort_values("importance", ascending=False)
     importances.to_csv(EVALUATION_OUTPUT_DIR / "feature_importance.csv", index=False)
+    write_model_evaluation_tables(metrics, report_table, matrix_table, importances)
 
     return metrics
+
+
+def write_model_evaluation_tables(
+    metrics: dict[str, float],
+    report_table: pd.DataFrame,
+    matrix_table: pd.DataFrame,
+    importances: pd.DataFrame,
+) -> None:
+    """Create a thesis-friendly Markdown report that opens directly in VS Code."""
+    report_display = report_table.copy().round(4)
+    matrix_display = matrix_table.copy()
+    importance_display = importances.head(10).copy()
+    importance_display["importance"] = importance_display["importance"].round(4)
+
+    markdown = f"""# HyperDect Random Forest Model Evaluation Tables
+
+## Dataset Split
+
+| Item | Value |
+|---|---:|
+| Total records | {metrics["train_rows"] + metrics["test_rows"]:,} |
+| Training records | {metrics["train_rows"]:,} |
+| Testing records | {metrics["test_rows"]:,} |
+| Split ratio | 80% training / 20% testing |
+
+## Summary Metrics
+
+| Metric | Formula | Result |
+|---|---|---:|
+| Accuracy | Correct predictions / Total predictions | {metrics["accuracy"]:.4f} |
+| Weighted Precision | sum(Precision_i x Support_i) / Total support | {metrics["precision_weighted"]:.4f} |
+| Weighted Recall | sum(Recall_i x Support_i) / Total support | {metrics["recall_weighted"]:.4f} |
+| Weighted F1 Score | sum(F1_i x Support_i) / Total support | {metrics["f1_weighted"]:.4f} |
+| Weighted ROC-AUC OvR | Weighted average of one-vs-rest AUC scores | {metrics["roc_auc_weighted_ovr"]:.4f} |
+| Training Time | End time - Start time | {metrics["training_time_seconds"]:.4f} seconds |
+
+## Classification Report
+
+{dataframe_to_markdown(report_display)}
+
+## Confusion Matrix
+
+{dataframe_to_markdown(matrix_display)}
+
+## Top Feature Importances
+
+{dataframe_to_markdown(importance_display, include_index=False)}
+
+## Notes
+
+The confusion matrix is based only on the 20% test set. In this run, the test
+set contains {metrics["test_rows"]:,} records. The model was trained on the
+remaining {metrics["train_rows"]:,} records.
+
+These results are based on syntheticized regional risk-factor data and a derived
+screening risk category. They are useful for prototype evaluation, but they are
+not clinical validation using real individual patient diagnosis outcomes.
+"""
+
+    (EVALUATION_OUTPUT_DIR / "MODEL_EVALUATION_TABLES.md").write_text(markdown, encoding="utf-8")
+
+
+def dataframe_to_markdown(dataframe: pd.DataFrame, include_index: bool = True) -> str:
+    table = dataframe.copy()
+    if include_index:
+        table = table.reset_index().rename(columns={"index": ""})
+
+    headers = [str(column) for column in table.columns]
+    lines = [
+        "| " + " | ".join(headers) + " |",
+        "| " + " | ".join("---" for _ in headers) + " |",
+    ]
+
+    for _, row in table.iterrows():
+        values = [str(value) for value in row.tolist()]
+        lines.append("| " + " | ".join(values) + " |")
+
+    return "\n".join(lines)
 
 
 def run_llm_framework(syntheticized_sheets: dict[str, pd.DataFrame]) -> None:
@@ -446,6 +535,7 @@ def sync_public_modeling_outputs() -> None:
         "confusion_matrix.csv",
         "confusion_matrix.png",
         "feature_importance.csv",
+        "MODEL_EVALUATION_TABLES.md",
     ]:
         source = EVALUATION_OUTPUT_DIR / file_name
         if source.exists():
