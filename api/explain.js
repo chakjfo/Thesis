@@ -8,9 +8,15 @@ function fallbackExplanation(payload) {
   const selectedFactors = payload.checklist?.selectedFactors?.length
     ? payload.checklist.selectedFactors.join(", ")
     : "no checklist risk factors selected";
+  const topFactors = payload.topRegionalFactors?.length
+    ? payload.topRegionalFactors
+        .map((factor) => `${factor.label} (${percent(factor.value)})`)
+        .join(", ")
+    : "the available regional factors";
 
   return (
     `For ${payload.area}, the regional background risk score is ${percent(payload.regionalRiskScore)}. ` +
+    `In the dataset, the strongest regional factors are ${topFactors}. ` +
     `Your checklist shows ${selectedFactors}. Based on these screening-support inputs, ` +
     `HyperDect places the result in the ${String(payload.riskCategory).toLowerCase()} risk category. ` +
     "This is not a diagnosis. It is meant to support early awareness and encourage follow-up with a health worker or licensed clinician."
@@ -24,8 +30,10 @@ You are the explanation component of HyperDect, a prototype hypertension screeni
 HyperDect is for health awareness and screening support only. It must not diagnose, treat, or replace advice from a licensed health professional.
 
 Write one short plain-English paragraph for the user.
+Keep it brief: 3 to 5 sentences only.
 Use careful wording such as "may indicate", "screening-support result", and "consider consulting a health worker".
 Do not say the user has hypertension.
+Use the dataset details below, especially the strongest regional factors.
 
 Input:
 - Region: ${payload.area}
@@ -35,6 +43,9 @@ Input:
 - Regional background risk score: ${percent(payload.regionalRiskScore)}
 - Regional records used: ${payload.rowCount}
 - Selected checklist factors: ${payload.checklist?.selectedFactors?.join(", ") || "none"}
+- Strongest regional dataset factors: ${
+    payload.topRegionalFactors?.map((factor) => `${factor.label} ${percent(factor.value)}`).join(", ") || "none"
+  }
 
 Regional factor rates:
 - Smoking history: ${percent(payload.regionalRates?.smoking_history)}

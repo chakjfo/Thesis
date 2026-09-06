@@ -67,6 +67,16 @@ function checklistScore(formData) {
   };
 }
 
+function topRegionalFactors(summary) {
+  return FACTORS.map(([key, label]) => ({
+    key,
+    label,
+    value: summary[key],
+  }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 3);
+}
+
 function computeScreening(summary, checklist) {
   const finalScore = Math.min(1, (summary.regionalRiskScore * 0.55) + (checklist.score * 0.45));
   return {
@@ -96,9 +106,12 @@ function renderResult(summary, checklist, result) {
   const selectedFactors = checklist.names.length > 0
     ? checklist.names.join(", ")
     : "no checklist risk factors selected";
+  const topFactors = topRegionalFactors(summary)
+    .map((factor) => `${factor.label} (${percent(factor.value)})`)
+    .join(", ");
 
   explanationSource.textContent = "Local fallback";
-  riskExplanation.textContent = `For ${summary.area}, the regional background score is ${percent(summary.regionalRiskScore)}. Your checklist shows ${selectedFactors}. HyperDect combines those inputs to produce a ${result.category.toLowerCase()} screening-support category. This result is for awareness and early risk checking only.`;
+  riskExplanation.textContent = `For ${summary.area}, the regional background score is ${percent(summary.regionalRiskScore)}. The strongest regional factors in the dataset are ${topFactors}. Your checklist shows ${selectedFactors}. HyperDect combines these inputs to produce a ${result.category.toLowerCase()} screening-support category. This result is for awareness and early risk checking only.`;
 
   renderMetrics(summary);
 }
@@ -121,6 +134,7 @@ async function renderLlmExplanation(summary, checklist, result) {
       overweight: summary.overweight,
       obesity: summary.obesity,
     },
+    topRegionalFactors: topRegionalFactors(summary),
     checklist: {
       selectedFactors: checklist.names,
       selectedCount: checklist.count,
