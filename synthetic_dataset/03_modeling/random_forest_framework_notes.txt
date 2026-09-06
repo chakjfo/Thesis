@@ -1,0 +1,12 @@
+HyperDect Random Forest framework notes
+
+HyperDect is for hypertension screening support and health awareness only. It must not diagnose, treat, or replace advice from a licensed health professional.
+
+Created random_forest_ready_dataset.csv with encoded regional risk-factor rates.
+The current target column is screening_risk_category, derived from regional_risk_score.
+When real user checklist responses become available, append encoded checklist fields as features.
+Recommended next steps: train/test split, RandomForestClassifier training, evaluation, then comparison with LLM explanations.
+
+Rows: 5128
+Columns: 12
+

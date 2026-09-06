@@ -1,0 +1,10 @@
+{
+  "name": "hyperdect",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HyperDect hypertension screening-support prototype for Vercel.",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "vercel dev"
+  }
+}

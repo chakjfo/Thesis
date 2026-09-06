@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HyperDect</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="screening-panel" aria-labelledby="app-title">
+        <div class="masthead">
+          <div>
+            <p class="eyebrow">Hypertension screening support</p>
+            <h1 id="app-title">HyperDect</h1>
+          </div>
+          <div class="status-pill" id="data-status">Loading dataset</div>
+        </div>
+
+        <form id="screening-form" class="screening-form">
+          <label class="field">
+            <span>Region</span>
+            <select id="area-select" name="area" required>
+              <option value="">Loading regions...</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Population Group</span>
+            <select id="population-select" name="population_group" required>
+              <option value="Adult">Adult</option>
+              <option value="Senior Citizen">Senior Citizen</option>
+            </select>
+          </label>
+
+          <div class="checklist" aria-label="Risk factor checklist">
+            <label><input type="checkbox" name="smoking_history"> Smoking history</label>
+            <label><input type="checkbox" name="binge_drinking"> Binge drinking</label>
+            <label><input type="checkbox" name="insufficient_physical_activity"> Lack of exercise</label>
+            <label><input type="checkbox" name="unhealthy_diet"> Unhealthy diet</label>
+            <label><input type="checkbox" name="overweight"> Overweight</label>
+            <label><input type="checkbox" name="obesity"> Obesity</label>
+          </div>
+
+          <button type="submit">Check Screening Risk</button>
+        </form>
+      </section>
+
+      <section class="results-panel" aria-live="polite">
+        <div class="risk-summary">
+          <span class="label">Screening Result</span>
+          <strong id="risk-category">Waiting for input</strong>
+          <span id="risk-score">Select a region and answer the checklist.</span>
+        </div>
+
+        <div class="explanation">
+          <h2>Plain-English Explanation</h2>
+          <p id="risk-explanation">
+            HyperDect uses the selected region's background risk-factor trends and your checklist answers to provide screening-support guidance.
+          </p>
+        </div>
+
+        <div class="metrics-grid" id="metrics-grid"></div>
+
+        <p class="medical-note">
+          HyperDect is for screening support and health awareness only. It does not diagnose, treat, or replace advice from a licensed health professional.
+        </p>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
