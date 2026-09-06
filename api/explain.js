@@ -1,4 +1,4 @@
-const OPENAI_API_URL = "https://api.openai.com/v1/responses";
+const DEFAULT_GEMINI_MODEL = "gemini-3.6-flash";
 
 function percent(value) {
   return `${Math.round(Number(value || 0) * 100)}%`;
@@ -54,53 +54,65 @@ export default async function handler(request, response) {
 
   const payload = request.body || {};
 
-  if (!process.env.OPENAI_API_KEY) {
+  if (!process.env.GEMINI_API_KEY) {
     response.status(200).json({
       explanation: fallbackExplanation(payload),
       source: "local-fallback",
-      reason: "OPENAI_API_KEY is missing in this deployment.",
+      reason: "GEMINI_API_KEY is missing in this deployment.",
     });
     return;
   }
 
   try {
-    const openaiResponse = await fetch(OPENAI_API_URL, {
+    const model = process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    const geminiResponse = await fetch(geminiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        "x-goog-api-key": process.env.GEMINI_API_KEY,
       },
       body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
-        input: buildPrompt(payload),
-        max_output_tokens: 180,
+        contents: [
+          {
+            parts: [
+              {
+                text: buildPrompt(payload),
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          maxOutputTokens: 180,
+          temperature: 0.4,
+        },
       }),
     });
 
-    if (!openaiResponse.ok) {
-      const errorText = await openaiResponse.text();
+    if (!geminiResponse.ok) {
+      const errorText = await geminiResponse.text();
       response.status(200).json({
         explanation: fallbackExplanation(payload),
         source: "local-fallback",
-        reason: `OpenAI request failed with status ${openaiResponse.status}.`,
+        reason: `Gemini request failed with status ${geminiResponse.status}.`,
         detail: errorText.slice(0, 500),
       });
       return;
     }
 
-    const data = await openaiResponse.json();
-    const explanation =
-      data.output_text ||
-      data.output?.flatMap((item) => item.content || [])
-        .map((content) => content.text)
-        .filter(Boolean)
-        .join(" ")
-        .trim();
+    const data = await geminiResponse.json();
+    const explanation = data.candidates?.[0]?.content?.parts
+      ?.map((part) => part.text)
+      .filter(Boolean)
+      .join(" ")
+      .trim();
 
     response.status(200).json({
       explanation: explanation || fallbackExplanation(payload),
       source: explanation ? "llm" : "local-fallback",
-      reason: explanation ? undefined : "OpenAI returned an empty explanation.",
+      provider: explanation ? "gemini" : undefined,
+      model: explanation ? model : undefined,
+      reason: explanation ? undefined : "Gemini returned an empty explanation.",
     });
   } catch (error) {
     response.status(200).json({

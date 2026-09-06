@@ -140,7 +140,7 @@ async function renderLlmExplanation(summary, checklist, result) {
       throw new Error(data.error || "Unable to generate explanation.");
     }
     riskExplanation.textContent = data.explanation;
-    explanationSource.textContent = data.source === "llm" ? "LLM via OpenAI" : "Local fallback";
+    explanationSource.textContent = data.source === "llm" ? "LLM via Gemini" : "Local fallback";
 
     if (data.source !== "llm" && data.reason) {
       riskExplanation.textContent += ` Reason: ${data.reason}`;

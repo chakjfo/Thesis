@@ -38,22 +38,22 @@ For production:
 vercel --prod
 ```
 
-## Optional LLM Explanation
+## Optional Gemini LLM Explanation
 
 The app includes `/api/explain` for the HyperDect LLM explanation component.
 Without an API key, it uses a local plain-English fallback explanation so the
 deployment still works.
 
-To enable real LLM-generated explanations in Vercel, add:
+To enable real Gemini-generated explanations in Vercel, add:
 
 ```text
-OPENAI_API_KEY=your_openai_api_key
+GEMINI_API_KEY=your_gemini_api_key
 ```
 
 Optional:
 
 ```text
-OPENAI_MODEL=gpt-4.1-mini
+GEMINI_MODEL=gemini-3.6-flash
 ```
 
 ## Important Note
