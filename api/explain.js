@@ -58,6 +58,7 @@ export default async function handler(request, response) {
     response.status(200).json({
       explanation: fallbackExplanation(payload),
       source: "local-fallback",
+      reason: "OPENAI_API_KEY is missing in this deployment.",
     });
     return;
   }
@@ -77,9 +78,12 @@ export default async function handler(request, response) {
     });
 
     if (!openaiResponse.ok) {
+      const errorText = await openaiResponse.text();
       response.status(200).json({
         explanation: fallbackExplanation(payload),
         source: "local-fallback",
+        reason: `OpenAI request failed with status ${openaiResponse.status}.`,
+        detail: errorText.slice(0, 500),
       });
       return;
     }
@@ -96,11 +100,13 @@ export default async function handler(request, response) {
     response.status(200).json({
       explanation: explanation || fallbackExplanation(payload),
       source: explanation ? "llm" : "local-fallback",
+      reason: explanation ? undefined : "OpenAI returned an empty explanation.",
     });
   } catch (error) {
     response.status(200).json({
       explanation: fallbackExplanation(payload),
       source: "local-fallback",
+      reason: error.message,
     });
   }
 }

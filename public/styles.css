@@ -84,6 +84,29 @@ h2 {
   margin-bottom: 10px;
 }
 
+.explanation-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.explanation-heading h2 {
+  margin-bottom: 0;
+}
+
+#explanation-source {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  background: var(--panel);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
 .status-pill {
   min-width: 116px;
   padding: 8px 10px;

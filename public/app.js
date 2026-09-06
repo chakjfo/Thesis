@@ -18,6 +18,7 @@ const dataStatus = document.querySelector("#data-status");
 const riskCategory = document.querySelector("#risk-category");
 const riskScore = document.querySelector("#risk-score");
 const riskExplanation = document.querySelector("#risk-explanation");
+const explanationSource = document.querySelector("#explanation-source");
 const metricsGrid = document.querySelector("#metrics-grid");
 
 function percent(value) {
@@ -96,6 +97,7 @@ function renderResult(summary, checklist, result) {
     ? checklist.names.join(", ")
     : "no checklist risk factors selected";
 
+  explanationSource.textContent = "Local fallback";
   riskExplanation.textContent = `For ${summary.area}, the regional background score is ${percent(summary.regionalRiskScore)}. Your checklist shows ${selectedFactors}. HyperDect combines those inputs to produce a ${result.category.toLowerCase()} screening-support category. This result is for awareness and early risk checking only.`;
 
   renderMetrics(summary);
@@ -138,7 +140,13 @@ async function renderLlmExplanation(summary, checklist, result) {
       throw new Error(data.error || "Unable to generate explanation.");
     }
     riskExplanation.textContent = data.explanation;
+    explanationSource.textContent = data.source === "llm" ? "LLM via OpenAI" : "Local fallback";
+
+    if (data.source !== "llm" && data.reason) {
+      riskExplanation.textContent += ` Reason: ${data.reason}`;
+    }
   } catch (error) {
+    explanationSource.textContent = "Local fallback";
     renderResult(summary, checklist, result);
   }
 }
