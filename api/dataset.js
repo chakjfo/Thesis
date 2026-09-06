@@ -11,6 +11,20 @@ const REQUIRED_COLUMNS = [
   "screening_risk_category",
 ];
 
+function normalizeGoogleSheetCsvUrl(value) {
+  const url = new URL(value);
+  const match = url.pathname.match(/\/spreadsheets\/d\/([^/]+)/);
+
+  if (!match) {
+    return value;
+  }
+
+  const sheetId = match[1];
+  const hashGid = url.hash.match(/gid=(\d+)/);
+  const gid = url.searchParams.get("gid") || (hashGid ? hashGid[1] : "0");
+  return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+}
+
 function parseCsv(text) {
   const rows = [];
   let row = [];
@@ -91,15 +105,25 @@ export default async function handler(request, response) {
   }
 
   try {
-    const sheetResponse = await fetch(sheetUrl);
+    const csvUrl = normalizeGoogleSheetCsvUrl(sheetUrl);
+    const sheetResponse = await fetch(csvUrl);
     if (!sheetResponse.ok) {
       response.status(502).json({
         error: `Google Sheet request failed with status ${sheetResponse.status}.`,
+        hint: "Check that the sheet is shared publicly or published to the web.",
       });
       return;
     }
 
     const csvText = await sheetResponse.text();
+    if (csvText.trim().startsWith("<")) {
+      response.status(502).json({
+        error: "Google returned a web page instead of CSV data.",
+        hint: "Publish the sheet to the web or set sharing so anyone with the link can view it.",
+      });
+      return;
+    }
+
     const records = parseCsv(csvText).map(normalizeRecord);
     response.status(200).json({
       records,
