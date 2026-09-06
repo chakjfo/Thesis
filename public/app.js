@@ -81,7 +81,7 @@ function topRegionalFactors(summary) {
 }
 
 function computeScreening(summary, checklist) {
-  const finalScore = Math.min(1, (summary.regionalRiskScore * 0.55) + (checklist.score * 0.45));
+  const finalScore = Math.min(1, checklist.score);
   return {
     score: finalScore,
     category: titleRisk(finalScore),
@@ -94,7 +94,7 @@ function renderMetrics(summary) {
     const value = summary[key];
     return `
       <div class="metric">
-        <span>${label}</span>
+        <span>Regional ${label}</span>
         <strong>${percent(value)}</strong>
       </div>
     `;
@@ -104,7 +104,7 @@ function renderMetrics(summary) {
 function renderResult(summary, checklist, result) {
   riskCategory.textContent = result.category;
   riskCategory.className = `risk-${result.category.toLowerCase()}`;
-  riskScore.textContent = `Screening score: ${percent(result.score)} using ${summary.rowCount.toLocaleString()} matching records for this region/group. Dataset total: ${summary.totalRecords.toLocaleString()} records.`;
+  riskScore.textContent = `Screening score: ${percent(result.score)} based on the user's checklist record. Regional background reference: ${summary.rowCount.toLocaleString()} matching records from ${summary.area}; dataset total: ${summary.totalRecords.toLocaleString()} records.`;
 
   const selectedFactors = checklist.names.length > 0
     ? checklist.names.join(", ")
@@ -114,7 +114,7 @@ function renderResult(summary, checklist, result) {
     .join(", ");
 
   explanationSource.textContent = "Local fallback";
-  riskExplanation.textContent = `For ${summary.area}, the regional background score is ${percent(summary.regionalRiskScore)}. The strongest regional factors in the dataset are ${topFactors}. Your checklist shows ${selectedFactors}. HyperDect combines these inputs to produce a ${result.category.toLowerCase()} screening-support category. This result is for awareness and early risk checking only.`;
+  riskExplanation.textContent = `The user's checklist record shows ${selectedFactors}, giving a ${result.category.toLowerCase()} screening-support category. As added background only, the dataset for ${summary.area} shows a ${percent(summary.regionalRiskScore)} regional risk-factor indicator, with the strongest recorded factors being ${topFactors}. This regional information helps health professionals understand the community context, but the user's screening score is based on the user's own checklist record.`;
 
   renderMetrics(summary);
 }

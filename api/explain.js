@@ -15,10 +15,10 @@ function fallbackExplanation(payload) {
     : "the available regional factors";
 
   return (
-    `For ${payload.area}, the regional background risk score is ${percent(payload.regionalRiskScore)}. ` +
-    `In the dataset, the strongest regional factors are ${topFactors}. ` +
-    `Your checklist shows ${selectedFactors}. Based on these screening-support inputs, ` +
-    `HyperDect places the result in the ${String(payload.riskCategory).toLowerCase()} risk category. ` +
+    `The user's checklist record shows ${selectedFactors}, giving a ${String(payload.riskCategory).toLowerCase()} screening-support category. ` +
+    `As added background only, the dataset for ${payload.area} shows a ${percent(payload.regionalRiskScore)} regional risk-factor indicator. ` +
+    `The strongest recorded regional factors are ${topFactors}. ` +
+    "This regional information helps health professionals understand the community context, but the user's screening score is based on the user's own checklist record. " +
     "This is not a diagnosis. It is meant to support early awareness and encourage follow-up with a health worker or licensed clinician."
   );
 }
@@ -33,14 +33,17 @@ Write one short plain-English paragraph for the user.
 Keep it brief: 3 to 5 sentences only.
 Use careful wording such as "may indicate", "screening-support result", and "consider consulting a health worker".
 Do not say the user has hypertension.
-Use the dataset details below, especially the strongest regional factors.
+The user's screening score must be explained as based on the user's own checklist record.
+The regional dataset must be described only as added background/context about recorded community-level risk-factor patterns.
+Do not imply that the selected region determines whether the user has hypertension.
+Use the dataset details below, especially the strongest regional factors, as contextual information for health professionals.
 
 Input:
 - Region: ${payload.area}
 - Population group: ${payload.populationGroup}
 - Screening risk category: ${payload.riskCategory}
-- Screening score: ${percent(payload.score)}
-- Regional background risk score: ${percent(payload.regionalRiskScore)}
+- User checklist screening score: ${percent(payload.score)}
+- Regional background risk-factor indicator: ${percent(payload.regionalRiskScore)}
 - Matching records for selected region/group: ${payload.rowCount}
 - Total syntheticized dataset records: ${payload.totalRecords}
 - Selected checklist factors: ${payload.checklist?.selectedFactors?.join(", ") || "none"}
