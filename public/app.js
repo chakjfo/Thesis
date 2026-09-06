@@ -20,6 +20,8 @@ const riskScore = document.querySelector("#risk-score");
 const riskExplanation = document.querySelector("#risk-explanation");
 const explanationSource = document.querySelector("#explanation-source");
 const metricsGrid = document.querySelector("#metrics-grid");
+const evaluationStatus = document.querySelector("#evaluation-status");
+const evaluationGrid = document.querySelector("#evaluation-grid");
 
 function percent(value) {
   return `${Math.round(Number(value || 0) * 100)}%`;
@@ -188,6 +190,38 @@ async function loadDataset() {
   }
 }
 
+function metricPercent(value) {
+  return `${(Number(value || 0) * 100).toFixed(2)}%`;
+}
+
+async function loadEvaluation() {
+  try {
+    const response = await fetch("/data/evaluation/random_forest_metrics.json");
+    if (!response.ok) {
+      throw new Error("Evaluation unavailable.");
+    }
+
+    const metrics = await response.json();
+    evaluationGrid.innerHTML = [
+      ["Accuracy", metricPercent(metrics.accuracy)],
+      ["Precision", metricPercent(metrics.precision_weighted)],
+      ["Recall", metricPercent(metrics.recall_weighted)],
+      ["F1 Score", metricPercent(metrics.f1_weighted)],
+      ["Training Time", `${Number(metrics.training_time_seconds).toFixed(2)}s`],
+      ["Test Rows", Number(metrics.test_rows).toLocaleString()],
+    ].map(([label, value]) => `
+      <div class="evaluation-metric">
+        <span>${label}</span>
+        <strong>${value}</strong>
+      </div>
+    `).join("");
+    evaluationStatus.textContent = "Loaded";
+  } catch (error) {
+    evaluationStatus.textContent = "Unavailable";
+    evaluationGrid.innerHTML = "";
+  }
+}
+
 form.addEventListener("submit", (event) => {
   event.preventDefault();
   const formData = new FormData(form);
@@ -206,3 +240,4 @@ form.addEventListener("submit", (event) => {
 });
 
 loadDataset();
+loadEvaluation();
