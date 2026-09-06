@@ -38,6 +38,24 @@ For production:
 vercel --prod
 ```
 
+## Optional LLM Explanation
+
+The app includes `/api/explain` for the HyperDect LLM explanation component.
+Without an API key, it uses a local plain-English fallback explanation so the
+deployment still works.
+
+To enable real LLM-generated explanations in Vercel, add:
+
+```text
+OPENAI_API_KEY=your_openai_api_key
+```
+
+Optional:
+
+```text
+OPENAI_MODEL=gpt-4.1-mini
+```
+
 ## Important Note
 
 HyperDect is a screening-support and health-awareness prototype. It is not for

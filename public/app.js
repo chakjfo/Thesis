@@ -101,6 +101,48 @@ function renderResult(summary, checklist, result) {
   renderMetrics(summary);
 }
 
+async function renderLlmExplanation(summary, checklist, result) {
+  riskExplanation.textContent = "Generating plain-English explanation...";
+
+  const payload = {
+    area: summary.area,
+    populationGroup: summary.populationGroup,
+    rowCount: summary.rowCount,
+    score: result.score,
+    riskCategory: result.category,
+    regionalRiskScore: summary.regionalRiskScore,
+    regionalRates: {
+      smoking_history: summary.smoking_history,
+      binge_drinking: summary.binge_drinking,
+      insufficient_physical_activity: summary.insufficient_physical_activity,
+      unhealthy_diet: summary.unhealthy_diet,
+      overweight: summary.overweight,
+      obesity: summary.obesity,
+    },
+    checklist: {
+      selectedFactors: checklist.names,
+      selectedCount: checklist.count,
+    },
+  };
+
+  try {
+    const response = await fetch("/api/explain", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Unable to generate explanation.");
+    }
+    riskExplanation.textContent = data.explanation;
+  } catch (error) {
+    renderResult(summary, checklist, result);
+  }
+}
+
 function populateAreas() {
   const areas = [...new Set(state.records.map((record) => record.Area).filter(Boolean))].sort();
   areaSelect.innerHTML = areas.map((area) => `<option value="${area}">${area}</option>`).join("");
@@ -138,6 +180,7 @@ form.addEventListener("submit", (event) => {
   const checklist = checklistScore(formData);
   const result = computeScreening(summary, checklist);
   renderResult(summary, checklist, result);
+  renderLlmExplanation(summary, checklist, result);
 });
 
 loadDataset();
