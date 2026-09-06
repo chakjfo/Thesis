@@ -1,4 +1,8 @@
 from pathlib import Path
+import json
+import os
+import shutil
+import time
 
 import numpy as np
 import pandas as pd
@@ -19,6 +23,9 @@ OUTPUT_DIR = Path("synthetic_dataset")
 CLEANED_OUTPUT_DIR = OUTPUT_DIR / "01_cleaned"
 SYNTHETICIZED_OUTPUT_DIR = OUTPUT_DIR / "02_syntheticized"
 MODELING_OUTPUT_DIR = OUTPUT_DIR / "03_modeling"
+EVALUATION_OUTPUT_DIR = MODELING_OUTPUT_DIR / "evaluation"
+PUBLIC_DATA_DIR = Path("public") / "data"
+PUBLIC_EVALUATION_DIR = PUBLIC_DATA_DIR / "evaluation"
 OUTPUT_WORKBOOK = OUTPUT_DIR / "NCD_2025_Risk_Factors_AD_SC_synthetic.xlsx"
 ROWS_PER_SHEET = 2000
 RANDOM_SEED = 20250904
@@ -64,6 +71,18 @@ CHECKLIST_FACTORS = {
         "Obese (Male)",
     ],
 }
+
+MODEL_FEATURE_COLUMNS = [
+    "population_group",
+    "is_synthetic",
+    "regional_smoking_history_rate",
+    "regional_binge_drinking_rate",
+    "regional_insufficient_physical_activity_rate",
+    "regional_unhealthy_diet_rate",
+    "regional_overweight_rate",
+    "regional_obesity_rate",
+]
+MODEL_TARGET_COLUMN = "screening_risk_category"
 
 
 def read_sheet(sheet_name: str) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -246,6 +265,200 @@ def build_random_forest_frame(syntheticized_sheets: dict[str, pd.DataFrame]) -> 
     return pd.concat(frames, ignore_index=True)
 
 
+def evaluate_random_forest_model(model_frame: pd.DataFrame) -> dict[str, float]:
+    """Train and evaluate the Random Forest screening category model."""
+    os.environ.setdefault("MPLCONFIGDIR", str(EVALUATION_OUTPUT_DIR / "matplotlib_cache"))
+    EVALUATION_OUTPUT_DIR.mkdir(exist_ok=True)
+    import matplotlib
+    matplotlib.use("Agg")
+    from matplotlib import pyplot as plt
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.metrics import (
+        accuracy_score,
+        classification_report,
+        confusion_matrix,
+        f1_score,
+        precision_score,
+        recall_score,
+        roc_auc_score,
+    )
+    from sklearn.model_selection import train_test_split
+
+    data = model_frame.dropna(subset=[MODEL_TARGET_COLUMN]).copy()
+    features = pd.get_dummies(data[MODEL_FEATURE_COLUMNS], columns=["population_group"])
+    target = data[MODEL_TARGET_COLUMN]
+
+    x_train, x_test, y_train, y_test = train_test_split(
+        features,
+        target,
+        test_size=0.20,
+        random_state=RANDOM_SEED,
+        stratify=target,
+    )
+
+    model = RandomForestClassifier(
+        n_estimators=300,
+        random_state=RANDOM_SEED,
+        class_weight="balanced",
+        n_jobs=-1,
+    )
+
+    training_start = time.perf_counter()
+    model.fit(x_train, y_train)
+    training_seconds = time.perf_counter() - training_start
+
+    predictions = model.predict(x_test)
+    probabilities = model.predict_proba(x_test)
+    labels = sorted(target.unique())
+    roc_auc_weighted_ovr = roc_auc_score(
+        y_test,
+        probabilities,
+        labels=model.classes_,
+        multi_class="ovr",
+        average="weighted",
+    )
+
+    metrics = {
+        "accuracy": accuracy_score(y_test, predictions),
+        "precision_weighted": precision_score(y_test, predictions, average="weighted", zero_division=0),
+        "recall_weighted": recall_score(y_test, predictions, average="weighted", zero_division=0),
+        "f1_weighted": f1_score(y_test, predictions, average="weighted", zero_division=0),
+        "roc_auc_weighted_ovr": roc_auc_weighted_ovr,
+        "training_time_seconds": training_seconds,
+        "train_rows": int(len(x_train)),
+        "test_rows": int(len(x_test)),
+    }
+
+    (EVALUATION_OUTPUT_DIR / "random_forest_metrics.json").write_text(
+        json.dumps(metrics, indent=2),
+        encoding="utf-8",
+    )
+
+    report = classification_report(y_test, predictions, labels=labels, zero_division=0)
+    (EVALUATION_OUTPUT_DIR / "classification_report.txt").write_text(report, encoding="utf-8")
+
+    report_table = pd.DataFrame(classification_report(
+        y_test,
+        predictions,
+        labels=labels,
+        output_dict=True,
+        zero_division=0,
+    )).transpose()
+    report_table.to_csv(EVALUATION_OUTPUT_DIR / "classification_report.csv")
+
+    matrix = confusion_matrix(y_test, predictions, labels=labels)
+    matrix_table = pd.DataFrame(
+        matrix,
+        index=[f"Actual {label}" for label in labels],
+        columns=[f"Predicted {label}" for label in labels],
+    )
+    matrix_table.to_csv(EVALUATION_OUTPUT_DIR / "confusion_matrix.csv")
+
+    figure, axis = plt.subplots(figsize=(6, 5))
+    image = axis.imshow(matrix, cmap="Blues")
+    axis.set_title("Random Forest Confusion Matrix")
+    axis.set_xlabel("Predicted")
+    axis.set_ylabel("Actual")
+    axis.set_xticks(range(len(labels)), labels=labels, rotation=30, ha="right")
+    axis.set_yticks(range(len(labels)), labels=labels)
+
+    for row_index in range(len(labels)):
+        for col_index in range(len(labels)):
+            axis.text(col_index, row_index, matrix[row_index, col_index], ha="center", va="center")
+
+    figure.colorbar(image, ax=axis, fraction=0.046, pad=0.04)
+    figure.tight_layout()
+    figure.savefig(EVALUATION_OUTPUT_DIR / "confusion_matrix.png", dpi=180)
+    plt.close(figure)
+
+    importances = pd.DataFrame({
+        "feature": features.columns,
+        "importance": model.feature_importances_,
+    }).sort_values("importance", ascending=False)
+    importances.to_csv(EVALUATION_OUTPUT_DIR / "feature_importance.csv", index=False)
+    write_model_evaluation_tables(metrics, report_table, matrix_table, importances)
+
+    return metrics
+
+
+def write_model_evaluation_tables(
+    metrics: dict[str, float],
+    report_table: pd.DataFrame,
+    matrix_table: pd.DataFrame,
+    importances: pd.DataFrame,
+) -> None:
+    """Create a thesis-friendly Markdown report that opens directly in VS Code."""
+    report_display = report_table.copy().round(4)
+    matrix_display = matrix_table.copy()
+    importance_display = importances.head(10).copy()
+    importance_display["importance"] = importance_display["importance"].round(4)
+
+    markdown = f"""# HyperDect Random Forest Model Evaluation Tables
+
+## Dataset Split
+
+| Item | Value |
+|---|---:|
+| Total records | {metrics["train_rows"] + metrics["test_rows"]:,} |
+| Training records | {metrics["train_rows"]:,} |
+| Testing records | {metrics["test_rows"]:,} |
+| Split ratio | 80% training / 20% testing |
+
+## Summary Metrics
+
+| Metric | Formula | Result |
+|---|---|---:|
+| Accuracy | Correct predictions / Total predictions | {metrics["accuracy"]:.4f} |
+| Weighted Precision | sum(Precision_i x Support_i) / Total support | {metrics["precision_weighted"]:.4f} |
+| Weighted Recall | sum(Recall_i x Support_i) / Total support | {metrics["recall_weighted"]:.4f} |
+| Weighted F1 Score | sum(F1_i x Support_i) / Total support | {metrics["f1_weighted"]:.4f} |
+| Weighted ROC-AUC OvR | Weighted average of one-vs-rest AUC scores | {metrics["roc_auc_weighted_ovr"]:.4f} |
+| Training Time | End time - Start time | {metrics["training_time_seconds"]:.4f} seconds |
+
+## Classification Report
+
+{dataframe_to_markdown(report_display)}
+
+## Confusion Matrix
+
+{dataframe_to_markdown(matrix_display)}
+
+## Top Feature Importances
+
+{dataframe_to_markdown(importance_display, include_index=False)}
+
+## Notes
+
+The confusion matrix is based only on the 20% test set. In this run, the test
+set contains {metrics["test_rows"]:,} records. The model was trained on the
+remaining {metrics["train_rows"]:,} records.
+
+These results are based on syntheticized regional risk-factor data and a derived
+screening risk category. They are useful for prototype evaluation, but they are
+not clinical validation using real individual patient diagnosis outcomes.
+"""
+
+    (EVALUATION_OUTPUT_DIR / "MODEL_EVALUATION_TABLES.md").write_text(markdown, encoding="utf-8")
+
+
+def dataframe_to_markdown(dataframe: pd.DataFrame, include_index: bool = True) -> str:
+    table = dataframe.copy()
+    if include_index:
+        table = table.reset_index().rename(columns={"index": ""})
+
+    headers = [str(column) for column in table.columns]
+    lines = [
+        "| " + " | ".join(headers) + " |",
+        "| " + " | ".join("---" for _ in headers) + " |",
+    ]
+
+    for _, row in table.iterrows():
+        values = [str(value) for value in row.tolist()]
+        lines.append("| " + " | ".join(values) + " |")
+
+    return "\n".join(lines)
+
+
 def run_llm_framework(syntheticized_sheets: dict[str, pd.DataFrame]) -> None:
     """Prepare files that the later LLM explanation step can use."""
     MODELING_OUTPUT_DIR.mkdir(exist_ok=True)
@@ -280,6 +493,8 @@ def run_random_forest_framework(syntheticized_sheets: dict[str, pd.DataFrame]) -
     MODELING_OUTPUT_DIR.mkdir(exist_ok=True)
     model_frame = build_random_forest_frame(syntheticized_sheets)
     model_frame.to_csv(MODELING_OUTPUT_DIR / "random_forest_ready_dataset.csv", index=False)
+    metrics = evaluate_random_forest_model(model_frame)
+    sync_public_modeling_outputs()
 
     summary_path = MODELING_OUTPUT_DIR / "random_forest_framework_notes.txt"
     summary_path.write_text(
@@ -288,12 +503,43 @@ def run_random_forest_framework(syntheticized_sheets: dict[str, pd.DataFrame]) -
         "Created random_forest_ready_dataset.csv with encoded regional risk-factor rates.\n"
         "The current target column is screening_risk_category, derived from regional_risk_score.\n"
         "When real user checklist responses become available, append encoded checklist fields as features.\n"
-        "Recommended next steps: train/test split, RandomForestClassifier training, evaluation, then comparison with LLM explanations.\n\n"
+        "The evaluation files are saved in the evaluation folder.\n\n"
         f"Rows: {len(model_frame)}\n"
         f"Columns: {len(model_frame.columns)}\n"
+        f"Accuracy: {metrics['accuracy']:.4f}\n"
+        f"Precision weighted: {metrics['precision_weighted']:.4f}\n"
+        f"Recall weighted: {metrics['recall_weighted']:.4f}\n"
+        f"F1 weighted: {metrics['f1_weighted']:.4f}\n"
+        f"Training time seconds: {metrics['training_time_seconds']:.4f}\n"
         + "\n",
         encoding="utf-8",
     )
+
+
+def sync_public_modeling_outputs() -> None:
+    """Copy deployable modeling artifacts into public/data for the Vercel app."""
+    if not PUBLIC_DATA_DIR.parent.exists():
+        return
+
+    PUBLIC_DATA_DIR.mkdir(exist_ok=True)
+    PUBLIC_EVALUATION_DIR.mkdir(exist_ok=True)
+    shutil.copy2(
+        MODELING_OUTPUT_DIR / "random_forest_ready_dataset.csv",
+        PUBLIC_DATA_DIR / "random_forest_ready_dataset.csv",
+    )
+
+    for file_name in [
+        "random_forest_metrics.json",
+        "classification_report.csv",
+        "classification_report.txt",
+        "confusion_matrix.csv",
+        "confusion_matrix.png",
+        "feature_importance.csv",
+        "MODEL_EVALUATION_TABLES.md",
+    ]:
+        source = EVALUATION_OUTPUT_DIR / file_name
+        if source.exists():
+            shutil.copy2(source, PUBLIC_EVALUATION_DIR / file_name)
 
 
 def sheet_with_metadata(metadata: pd.DataFrame, data: pd.DataFrame) -> pd.DataFrame:

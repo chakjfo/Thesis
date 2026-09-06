@@ -1,33 +1,30 @@
 # Deploy HyperDect to Vercel
 
-This project is ready for Vercel. The app reads the dataset from a published
-Google Sheet CSV URL through the Vercel API route at `/api/dataset`.
+This project is ready for Vercel. The app reads the bundled synthetic dataset
+from `public/data/random_forest_ready_dataset.csv` through the Vercel API route
+at `/api/dataset`.
 
-## 1. Prepare the Google Sheet
+## 1. Prepare the Dataset
 
-1. Open `synthetic_dataset/03_modeling/random_forest_ready_dataset.csv`.
-2. Upload or import it into Google Sheets.
-3. Publish or expose the sheet as CSV.
-4. Copy the CSV export URL.
-
-The URL should look similar to:
+The deployable dataset is already copied to:
 
 ```text
-https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/export?format=csv&gid=YOUR_GID
+public/data/random_forest_ready_dataset.csv
 ```
 
-## 2. Add the Vercel environment variable
-
-In Vercel Project Settings, add:
+If you regenerate the synthetic dataset later, copy the new file from:
 
 ```text
-HYPERDECT_GOOGLE_SHEET_CSV_URL=your_google_sheet_csv_export_url
+synthetic_dataset/03_modeling/random_forest_ready_dataset.csv
 ```
 
-Use the same variable name for Production and Preview if you want both
-deployments to read the same dataset.
+into:
 
-## 3. Deploy
+```text
+public/data/random_forest_ready_dataset.csv
+```
+
+## 2. Deploy
 
 From this folder:
 
@@ -39,6 +36,24 @@ For production:
 
 ```powershell
 vercel --prod
+```
+
+## Optional Gemini LLM Explanation
+
+The app includes `/api/explain` for the HyperDect LLM explanation component.
+Without an API key, it uses a local plain-English fallback explanation so the
+deployment still works.
+
+To enable real Gemini-generated explanations in Vercel, add:
+
+```text
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+Optional:
+
+```text
+GEMINI_MODEL=gemini-3.6-flash
 ```
 
 ## Important Note

@@ -1,3 +1,6 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
 const REQUIRED_COLUMNS = [
   "Area",
   "population_group",
@@ -10,6 +13,8 @@ const REQUIRED_COLUMNS = [
   "regional_risk_score",
   "screening_risk_category",
 ];
+
+const DATASET_PATH = path.join(process.cwd(), "public", "data", "random_forest_ready_dataset.csv");
 
 function parseCsv(text) {
   const rows = [];
@@ -81,25 +86,8 @@ function normalizeRecord(record) {
 }
 
 export default async function handler(request, response) {
-  const sheetUrl = process.env.HYPERDECT_GOOGLE_SHEET_CSV_URL;
-
-  if (!sheetUrl) {
-    response.status(500).json({
-      error: "Missing HYPERDECT_GOOGLE_SHEET_CSV_URL environment variable.",
-    });
-    return;
-  }
-
   try {
-    const sheetResponse = await fetch(sheetUrl);
-    if (!sheetResponse.ok) {
-      response.status(502).json({
-        error: `Google Sheet request failed with status ${sheetResponse.status}.`,
-      });
-      return;
-    }
-
-    const csvText = await sheetResponse.text();
+    const csvText = await readFile(DATASET_PATH, "utf-8");
     const records = parseCsv(csvText).map(normalizeRecord);
     response.status(200).json({
       records,
@@ -107,7 +95,7 @@ export default async function handler(request, response) {
     });
   } catch (error) {
     response.status(500).json({
-      error: "Unable to load the Google Sheet dataset.",
+      error: "Unable to load the bundled synthetic dataset.",
       detail: error.message,
     });
   }

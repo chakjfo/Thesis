@@ -916,17 +916,17 @@ Year (coverage),Source Folder,Source File,Area,Risk-assessed Population,With his
 3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0351,Southern Leyte,27223,1026,3590,346,4350,174,0,0,0,79,3474,6,11
 2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0352,Region 10,119135,0,6356,2528,10288,0,260,0,2483,2165,414,280,235
 1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 0353,Region 4A,1380705,41236,185020,11947,0,0,42177,2881,0,250941,160086,22590,23800
-1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 0354,Dinagat Islands,23481,0,2625,2205,3652,282,141,0,177,0,1384,0,243
-1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 0355,Bulacan,276310,0,0,0,30442,10029,11061,11398,13334,22755,18245,8330,2883
-2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0356,Camiguin,3710,29,18,162,78,0,0,116,33,0,11,11,0
-3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0357,Misamis Occidental,27309,197,263,373,0,370,316,0,542,0,319,0,0
-3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0358,Region 10,101092,2281,987,2500,8932,30,1872,0,0,106,1269,1477,0
-1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 0359,Cagayan,82708,3443,12304,3377,1592,3654,2831,7491,412,7630,7257,570,1138
-3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0360,Negros Oriental,59422,739,4367,3570,5461,5248,2213,0,0,6254,967,4819,1890
-2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0361,Region 3,1,0,0,0,0,0,0,0,0,0,0,0,0
-2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0362,Dinagat Islands,35440,1376,0,2587,0,0,15,0,0,0,2611,71,1031
-1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 0363,Surigao del Norte,35211,624,3443,0,2532,85,175,5353,2301,5841,1307,1456,396
-3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0364,NCR,796549,0,11053,0,6319,10353,14198,8180,6487,0,0,0,11341
+1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 0354,Dinagat Islands,23481,0,2625,2205,3652,282,141,0,177,0,1384,0,265
+2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0355,Rizal,29269,1147,1323,678,3349,642,0,210,7260,0,1479,0,1777
+2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0356,City of Dagupan,5552,67,272,475,171,0,59,29,0,227,146,95,0
+2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0357,City of Lapu-Lapu,22648,713,2504,2361,0,918,402,1441,1284,669,0,537,0
+1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 0358,Region 2,1,0,0,0,0,0,0,0,0,0,0,0,0
+3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0359,Pasay City,14478,0,0,167,264,0,36,504,93,111,318,95,0
+2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0360,Negros Oriental,24222,26,1333,0,2749,2638,186,228,0,0,615,1083,798
+3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0361,City of Zamboanga,26388,1106,1631,0,1909,0,0,143,887,0,197,0,0
+2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0362,South Cotabato,26461,249,3253,335,2695,0,0,11,316,0,1177,0,0
+2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0363,Ifugao,19108,120,320,399,910,45,99,0,0,398,2248,1385,352
+3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0364,Region 11,265843,14148,1803,465,18377,0,48010,58511,1635,19877,34692,0,3125
 1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 0365,Nueva Ecija,130265,614,2192,4919,18645,3632,3041,3497,2428,0,2812,1280,2887
 3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0366,Region 7,375819,19365,0,16930,30824,0,12694,57581,62985,15074,57901,31112,22164
 2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 0367,Palawan,28100,147,2779,0,2874,882,416,1438,243,0,1148,938,1341
@@ -1725,10 +1725,10 @@ Year (coverage),Source Folder,Source File,Area,Risk-assessed Population,With his
 2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1160,Davao Oriental,27629,765,3582,2324,5558,9872,5052,3946,56,703,0,196,512
 2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1161,City of Las Piñas,28676,456,2507,2447,1529,5325,3069,5370,4255,5275,3242,869,0
 1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 1162,Region 10,133813,104,10475,6459,0,0,1061,0,4292,0,0,0,0
-3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1163,Sarangani,37449,177,4023,550,0,0,955,574,1636,2099,1114,837,842
-1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 1164,Rizal,67859,3118,3791,7166,6379,607,1798,4263,7772,6471,1962,3439,0
-3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1165,Bulacan,271385,9621,24154,16369,32500,11418,0,11958,5482,24959,8727,6829,8033
-3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1166,City of Valenzuela,30924,0,0,322,216,197,25,483,290,1120,635,0,372
+3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1163,Sarangani,37449,177,4023,474,2419,0,635,2069,1440,1747,448,1532,544
+1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 1164,City of Bacolod,9403,121,887,90,0,9,100,0,0,1550,251,22,0
+1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 1165,South Cotabato,39189,673,4160,721,3465,0,507,204,407,899,792,3892,2002
+1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 1166,City of Butuan,17132,534,1451,542,799,83,13,269,161,746,2380,60,0
 2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1167,Tarlac,31581,0,2279,72,1035,292,155,300,0,964,1199,484,0
 3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1168,Caraga,109156,3766,14972,9334,6910,0,0,8416,7426,0,1444,806,3226
 2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1169,City of Lucena,25325,857,3883,1055,1648,0,585,3694,4962,2463,912,3406,175
@@ -2443,16 +2443,16 @@ Year (coverage),Source Folder,Source File,Area,Risk-assessed Population,With his
 3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1878,Negros Oriental,26846,846,2179,769,4231,926,1282,153,36,1204,921,1164,521
 1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 1879,Surigao del Norte,25920,645,0,2166,2334,1451,1563,0,691,3670,557,106,127
 3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1880,Camarines Sur,80720,1070,7539,0,8059,7697,4828,7468,0,0,5144,1455,290
-3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1881,City of Taguig,59395,1383,762,205,2622,868,1157,538,815,0,521,279,451
-2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1882,Leyte,72182,3393,9838,6317,1444,1464,0,0,75,4879,3058,2266,957
-2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1883,Kalinga,27446,913,0,395,3772,0,83,0,0,3683,0,0,0
-1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 1884,City of Makati,8002,81,496,224,72,2758,0,0,251,424,37,1122,641
-2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1885,Pasay City,12269,35,109,280,58,95,86,0,0,0,208,108,0
-2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1886,Misamis Occidental,13935,28,9,466,12,0,14,0,0,156,0,0,0
-2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1887,Albay,36326,0,1697,74,390,4842,0,868,118,1607,135,76,0
-1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 1888,City of Iloilo,32674,0,1240,0,1270,327,0,0,1106,510,244,381,139
-3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1889,Batanes,3604,77,45,322,481,393,308,377,516,229,491,528,334
-3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1890,Benguet,17574,0,874,31,1388,123,178,33,0,4195,0,0,0
+3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1881,City of Taguig,59395,1383,711,1381,2209,1157,471,925,1041,582,830,2344,0
+2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1882,Zamboanga Sibugay,33399,363,4535,99,2798,835,369,0,869,1394,443,1211,104
+3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1883,Lanao del Norte,42368,0,0,1231,3807,0,0,0,2118,0,0,0,429
+1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 1884,Caraga,112064,0,16535,2232,20241,4545,4664,0,6076,6495,9504,1567,1397
+2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1885,Zamboanga Sibugay,28139,0,2346,1258,300,645,591,1390,0,755,1146,661,335
+2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1886,Misamis Occidental,14895,0,149,0,313,0,0,371,68,386,199,0,243
+3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1887,La Union,84186,499,3155,2092,0,0,1006,743,0,0,6710,0,0
+1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 1888,Pampanga,112100,4594,6383,3938,9817,5552,2064,5036,4028,4200,1079,1081,2577
+1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 1889,Dinagat Islands,5689,96,785,382,726,501,46,15,35,1120,444,50,81
+1st Quarter 2025,Synthetic,Risk Factor AD synthetic row 1890,Bataan,73903,1191,3795,160,906,968,1127,2236,0,4468,3287,0,0
 3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1891,Pasay City,30668,0,0,292,259,42,987,370,97,752,0,65,0
 3rd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1892,Capiz,63440,195,4841,648,6629,0,2956,0,3799,190,42,1557,822
 2nd Quarter 2025,Synthetic,Risk Factor AD synthetic row 1893,Region 4B,125352,0,12258,124,34120,0,1321,5138,1360,15454,5471,5664,5759

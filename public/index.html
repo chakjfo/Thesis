@@ -48,15 +48,18 @@
 
       <section class="results-panel" aria-live="polite">
         <div class="risk-summary">
-          <span class="label">Screening Result</span>
+          <span class="label">User Checklist Screening Result</span>
           <strong id="risk-category">Waiting for input</strong>
           <span id="risk-score">Select a region and answer the checklist.</span>
         </div>
 
         <div class="explanation">
-          <h2>Plain-English Explanation</h2>
+          <div class="explanation-heading">
+            <h2>Plain-English Explanation</h2>
+            <span id="explanation-source">Local fallback</span>
+          </div>
           <p id="risk-explanation">
-            HyperDect uses the selected region's background risk-factor trends and your checklist answers to provide screening-support guidance.
+            HyperDect uses the user's checklist record for the screening score, while regional records provide added background context for health professionals.
           </p>
         </div>
 
@@ -65,6 +68,23 @@
         <p class="medical-note">
           HyperDect is for screening support and health awareness only. It does not diagnose, treat, or replace advice from a licensed health professional.
         </p>
+      </section>
+
+      <section class="evaluation-panel" aria-labelledby="evaluation-title">
+        <div class="evaluation-heading">
+          <div>
+            <p class="eyebrow">Random Forest Framework</p>
+            <h2 id="evaluation-title">Model Evaluation</h2>
+          </div>
+          <span id="evaluation-status">Loading</span>
+        </div>
+
+        <div class="evaluation-grid" id="evaluation-grid"></div>
+
+        <div class="matrix-wrap">
+          <h3>Confusion Matrix</h3>
+          <img id="confusion-matrix" alt="Random Forest confusion matrix" src="/data/evaluation/confusion_matrix.png">
+        </div>
       </section>
     </main>
 

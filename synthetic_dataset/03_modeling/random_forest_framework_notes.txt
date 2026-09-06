@@ -5,8 +5,13 @@ HyperDect is for hypertension screening support and health awareness only. It mu
 Created random_forest_ready_dataset.csv with encoded regional risk-factor rates.
 The current target column is screening_risk_category, derived from regional_risk_score.
 When real user checklist responses become available, append encoded checklist fields as features.
-Recommended next steps: train/test split, RandomForestClassifier training, evaluation, then comparison with LLM explanations.
+The evaluation files are saved in the evaluation folder.
 
 Rows: 5128
 Columns: 12
+Accuracy: 0.9864
+Precision weighted: 0.9886
+Recall weighted: 0.9864
+F1 weighted: 0.9872
+Training time seconds: 1.6816
 
