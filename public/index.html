@@ -75,11 +75,22 @@
           <p id="risk-explanation">
             HyperDect uses the user's checklist record for the screening score, while regional records provide added background context for health professionals.
           </p>
-          <div class="action-row">
-            <button type="button" class="secondary-button" data-modal-target="llm-modal">LLM Support</button>
-            <button type="button" class="secondary-button" data-modal-target="regional-modal">Regional Context</button>
-            <button type="button" class="secondary-button" data-modal-target="evaluation-modal">Model Evaluation</button>
-          </div>
+        </div>
+
+        <div class="result-strip primary-strip">
+          <span>Prevention Recommendations</span>
+          <p id="prevention-summary">Recommendations will appear after the checklist is submitted.</p>
+        </div>
+
+        <div class="result-strip">
+          <span>Regional Context Summary</span>
+          <p id="regional-summary">Regional background context will appear after a region is selected.</p>
+        </div>
+
+        <div class="action-row">
+          <button type="button" class="secondary-button" data-modal-target="llm-modal">LLM Support</button>
+          <button type="button" class="secondary-button" data-modal-target="regional-modal">Regional Context</button>
+          <button type="button" class="secondary-button" data-modal-target="evaluation-modal">Model Evaluation</button>
         </div>
 
         <p class="medical-note">

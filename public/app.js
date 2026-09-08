@@ -19,6 +19,8 @@ const riskCategory = document.querySelector("#risk-category");
 const riskScore = document.querySelector("#risk-score");
 const riskExplanation = document.querySelector("#risk-explanation");
 const explanationSource = document.querySelector("#explanation-source");
+const preventionSummary = document.querySelector("#prevention-summary");
+const regionalSummary = document.querySelector("#regional-summary");
 const llmGrid = document.querySelector("#llm-grid");
 const metricsGrid = document.querySelector("#metrics-grid");
 const regionalModalGrid = document.querySelector("#regional-modal-grid");
@@ -144,6 +146,8 @@ function renderResult(summary, checklist, result) {
 
   explanationSource.textContent = "Local fallback";
   riskExplanation.textContent = `The user's checklist record shows ${selectedFactors}, giving a ${result.category.toLowerCase()} screening-support category. As added background only, the dataset for ${summary.area} shows a ${percent(summary.regionalRiskScore)} regional risk-factor indicator, with the strongest recorded factors being ${topFactors}. This regional information helps health professionals understand the community context, but the user's screening score is based on the user's own checklist record.`;
+  preventionSummary.textContent = `For the selected factors, the user may consider these prevention steps: ${preventionRecommendationsFor(checklist.names)}.`;
+  regionalSummary.textContent = `${summary.area} is used only as background context. The strongest recorded regional factors are ${topFactors}.`;
   renderLlmSections({
     checklistInterpretation: `The user's checklist record includes ${selectedFactors}.`,
     riskReasoning: `The checklist result places the user in the ${result.category.toLowerCase()} screening-support category with a score of ${percent(result.score)}.`,
@@ -172,6 +176,14 @@ function renderLlmSections(sections = {}) {
       <p>${text || "No section generated."}</p>
     </div>
   `).join("");
+
+  if (sections.preventionRecommendations) {
+    preventionSummary.textContent = sections.preventionRecommendations;
+  }
+
+  if (sections.regionalContext) {
+    regionalSummary.textContent = sections.regionalContext;
+  }
 }
 
 async function renderLlmExplanation(summary, checklist, result) {

@@ -137,6 +137,8 @@ body {
 }
 
 .results-panel {
+  display: grid;
+  gap: 14px;
   padding: clamp(20px, 2.6vw, 28px);
 }
 
@@ -253,7 +255,7 @@ button:hover {
 }
 
 .secondary-button {
-  width: auto;
+  width: 100%;
   min-height: 38px;
   padding: 0 13px;
   border: 1px solid var(--line);
@@ -270,7 +272,7 @@ button:hover {
 .risk-summary {
   display: grid;
   gap: 9px;
-  padding: 4px 0 22px;
+  padding: 4px 0 18px;
   border-bottom: 1px solid var(--line);
 }
 
@@ -285,7 +287,7 @@ button:hover {
 }
 
 .explanation {
-  padding: 22px 0;
+  padding: 6px 0 0;
 }
 
 .explanation-heading,
@@ -301,10 +303,37 @@ button:hover {
 }
 
 .action-row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 9px;
-  margin-top: 17px;
+  margin-top: 2px;
+}
+
+.result-strip {
+  display: grid;
+  gap: 7px;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.result-strip span {
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.result-strip p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+  font-size: 0.92rem;
+}
+
+.primary-strip {
+  border-color: rgba(15, 118, 110, 0.28);
+  background: var(--accent-soft);
 }
 
 .metrics-grid,
@@ -372,7 +401,7 @@ button:hover {
 
 .medical-note {
   border-top: 1px solid var(--line);
-  padding-top: 18px;
+  padding-top: 14px;
   font-size: 0.9rem;
 }
 
@@ -461,6 +490,12 @@ button:hover {
   }
 }
 
+@media (max-width: 760px) {
+  .action-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 620px) {
   .site-header,
   .app-shell {
@@ -483,10 +518,6 @@ button:hover {
   }
 
   .action-row {
-    display: grid;
-  }
-
-  .secondary-button {
-    width: 100%;
+    grid-template-columns: 1fr;
   }
 }
