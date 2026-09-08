@@ -39,12 +39,9 @@ You are the LLM component of HyperDect, a prototype hypertension screening-suppo
 
 HyperDect is for health awareness and screening support only. It must not diagnose, treat, or replace advice from a licensed health professional.
 
-Return only valid JSON with these exact keys:
-- checklistInterpretation
-- riskReasoning
-- awarenessMessage
-- regionalContext
-- professionalNote
+Return only valid minified JSON. Do not use markdown. Do not wrap it in code fences.
+Use these exact keys:
+checklistInterpretation, riskReasoning, awarenessMessage, regionalContext, professionalNote
 
 Each value must be 1 brief sentence.
 Use careful wording such as "may indicate", "screening-support result", and "consider consulting a health worker".
@@ -82,7 +79,12 @@ function parseGeminiSections(text) {
     .replace(/^```\s*/i, "")
     .replace(/```$/i, "")
     .trim();
-  const parsed = JSON.parse(cleaned);
+  const jsonStart = cleaned.indexOf("{");
+  const jsonEnd = cleaned.lastIndexOf("}");
+  const jsonText = jsonStart >= 0 && jsonEnd > jsonStart
+    ? cleaned.slice(jsonStart, jsonEnd + 1)
+    : cleaned;
+  const parsed = JSON.parse(jsonText);
 
   return {
     checklistInterpretation: String(parsed.checklistInterpretation || "").trim(),
@@ -91,6 +93,31 @@ function parseGeminiSections(text) {
     regionalContext: String(parsed.regionalContext || "").trim(),
     professionalNote: String(parsed.professionalNote || "").trim(),
   };
+}
+
+function geminiTextToSections(text, payload) {
+  if (!text) {
+    return {
+      sections: fallbackSections(payload),
+      parsed: false,
+    };
+  }
+
+  try {
+    return {
+      sections: parseGeminiSections(text),
+      parsed: true,
+    };
+  } catch (error) {
+    return {
+      sections: {
+        ...fallbackSections(payload),
+        riskReasoning: text.trim(),
+      },
+      parsed: false,
+      reason: "Gemini returned text instead of valid JSON, so the text was kept as the risk reasoning section.",
+    };
+  }
 }
 
 export default async function handler(request, response) {
@@ -158,15 +185,15 @@ export default async function handler(request, response) {
       .filter(Boolean)
       .join(" ")
       .trim();
-    const sections = text ? parseGeminiSections(text) : fallbackSections(payload);
+    const parsedResult = geminiTextToSections(text, payload);
 
     response.status(200).json({
-      explanation: sectionsToExplanation(sections),
-      sections,
+      explanation: sectionsToExplanation(parsedResult.sections),
+      sections: parsedResult.sections,
       source: text ? "llm" : "local-fallback",
       provider: text ? "gemini" : undefined,
       model: text ? model : undefined,
-      reason: text ? undefined : "Gemini returned an empty explanation.",
+      reason: text ? parsedResult.reason : "Gemini returned an empty explanation.",
     });
   } catch (error) {
     const sections = fallbackSections(payload);
