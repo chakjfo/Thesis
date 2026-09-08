@@ -7,14 +7,28 @@
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
+    <header class="site-header">
+      <div class="brand-lockup">
+        <span class="brand-mark">H</span>
+        <div>
+          <strong>HyperDect</strong>
+          <span>Hypertension screening-support prototype</span>
+        </div>
+      </div>
+      <div class="header-meta">
+        <span id="data-status">Loading dataset</span>
+        <span>Screening support only</span>
+      </div>
+    </header>
+
     <main class="app-shell">
       <section class="screening-panel" aria-labelledby="app-title">
         <div class="masthead">
           <div>
-            <p class="eyebrow">Hypertension screening support</p>
-            <h1 id="app-title">HyperDect</h1>
+            <p class="eyebrow">Checklist Intake</p>
+            <h1 id="app-title">Screening Record</h1>
+            <p class="section-copy">Select the user's region for background context, then mark the risk factors present in the user's own record.</p>
           </div>
-          <div class="status-pill" id="data-status">Loading dataset</div>
         </div>
 
         <form id="screening-form" class="screening-form">
@@ -42,13 +56,13 @@
             <label><input type="checkbox" name="obesity"> Obesity</label>
           </div>
 
-          <button type="submit">Check Screening Risk</button>
+          <button type="submit">Generate Screening Result</button>
         </form>
       </section>
 
       <section class="results-panel" aria-live="polite">
         <div class="risk-summary">
-          <span class="label">User Checklist Screening Result</span>
+          <span class="label">User Checklist Result</span>
           <strong id="risk-category">Waiting for input</strong>
           <span id="risk-score">Select a region and answer the checklist.</span>
         </div>
@@ -62,9 +76,9 @@
             HyperDect uses the user's checklist record for the screening score, while regional records provide added background context for health professionals.
           </p>
           <div class="action-row">
-            <button type="button" class="secondary-button" data-modal-target="llm-modal">View LLM Support</button>
-            <button type="button" class="secondary-button" data-modal-target="regional-modal">View Regional Context</button>
-            <button type="button" class="secondary-button" data-modal-target="evaluation-modal">View Model Evaluation</button>
+            <button type="button" class="secondary-button" data-modal-target="llm-modal">LLM Support</button>
+            <button type="button" class="secondary-button" data-modal-target="regional-modal">Regional Context</button>
+            <button type="button" class="secondary-button" data-modal-target="evaluation-modal">Model Evaluation</button>
           </div>
         </div>
 
