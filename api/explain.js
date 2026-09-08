@@ -39,11 +39,14 @@ You are the LLM component of HyperDect, a prototype hypertension screening-suppo
 
 HyperDect is for health awareness and screening support only. It must not diagnose, treat, or replace advice from a licensed health professional.
 
-Return only valid minified JSON. Do not use markdown. Do not wrap it in code fences.
-Use these exact keys:
-checklistInterpretation, riskReasoning, awarenessMessage, regionalContext, professionalNote
+Return exactly five labeled lines using this format:
+CHECKLIST_INTERPRETATION: one brief sentence
+RISK_REASONING: one brief sentence
+AWARENESS_MESSAGE: one brief sentence
+REGIONAL_CONTEXT: one brief sentence
+PROFESSIONAL_NOTE: one brief sentence
 
-Each value must be 1 brief sentence.
+Do not use JSON. Do not use markdown. Do not use bullets.
 Use careful wording such as "may indicate", "screening-support result", and "consider consulting a health worker".
 Do not say the user has hypertension.
 The user's screening score must be explained as based on the user's own checklist record.
@@ -73,26 +76,39 @@ Regional factor rates:
 `.trim();
 }
 
-function parseGeminiSections(text) {
-  const cleaned = text
-    .replace(/^```json\s*/i, "")
-    .replace(/^```\s*/i, "")
-    .replace(/```$/i, "")
+function cleanSectionText(value) {
+  return String(value || "")
+    .replace(/[{}[\]"]/g, "")
+    .replace(/\s+/g, " ")
     .trim();
-  const jsonStart = cleaned.indexOf("{");
-  const jsonEnd = cleaned.lastIndexOf("}");
-  const jsonText = jsonStart >= 0 && jsonEnd > jsonStart
-    ? cleaned.slice(jsonStart, jsonEnd + 1)
-    : cleaned;
-  const parsed = JSON.parse(jsonText);
+}
 
-  return {
-    checklistInterpretation: String(parsed.checklistInterpretation || "").trim(),
-    riskReasoning: String(parsed.riskReasoning || "").trim(),
-    awarenessMessage: String(parsed.awarenessMessage || "").trim(),
-    regionalContext: String(parsed.regionalContext || "").trim(),
-    professionalNote: String(parsed.professionalNote || "").trim(),
+function parseLabeledSections(text) {
+  const labelMap = {
+    CHECKLIST_INTERPRETATION: "checklistInterpretation",
+    RISK_REASONING: "riskReasoning",
+    AWARENESS_MESSAGE: "awarenessMessage",
+    REGIONAL_CONTEXT: "regionalContext",
+    PROFESSIONAL_NOTE: "professionalNote",
   };
+  const sections = {};
+  const pattern = /(CHECKLIST_INTERPRETATION|RISK_REASONING|AWARENESS_MESSAGE|REGIONAL_CONTEXT|PROFESSIONAL_NOTE)\s*:\s*/g;
+  const matches = [...text.matchAll(pattern)];
+
+  for (let index = 0; index < matches.length; index += 1) {
+    const match = matches[index];
+    const nextMatch = matches[index + 1];
+    const label = match[1];
+    const start = match.index + match[0].length;
+    const end = nextMatch ? nextMatch.index : text.length;
+    sections[labelMap[label]] = cleanSectionText(text.slice(start, end));
+  }
+
+  return sections;
+}
+
+function hasAnyGeminiSection(sections) {
+  return Object.values(sections).some((value) => cleanSectionText(value).length > 0);
 }
 
 function geminiTextToSections(text, payload) {
@@ -103,21 +119,25 @@ function geminiTextToSections(text, payload) {
     };
   }
 
-  try {
-    return {
-      sections: parseGeminiSections(text),
-      parsed: true,
-    };
-  } catch (error) {
+  const geminiSections = parseLabeledSections(text);
+  if (hasAnyGeminiSection(geminiSections)) {
     return {
       sections: {
         ...fallbackSections(payload),
-        riskReasoning: text.trim(),
+        ...geminiSections,
       },
-      parsed: false,
-      reason: "Gemini returned text instead of valid JSON, so the text was kept as the risk reasoning section.",
+      parsed: true,
     };
   }
+
+  return {
+    sections: {
+      ...fallbackSections(payload),
+      riskReasoning: cleanSectionText(text),
+    },
+    parsed: true,
+    reason: "Gemini returned unlabeled text, so it was used as the risk reasoning section.",
+  };
 }
 
 export default async function handler(request, response) {
@@ -159,9 +179,8 @@ export default async function handler(request, response) {
           },
         ],
         generationConfig: {
-          maxOutputTokens: 320,
+          maxOutputTokens: 700,
           temperature: 0.4,
-          responseMimeType: "application/json",
         },
       }),
     });
@@ -190,9 +209,9 @@ export default async function handler(request, response) {
     response.status(200).json({
       explanation: sectionsToExplanation(parsedResult.sections),
       sections: parsedResult.sections,
-      source: text ? "llm" : "local-fallback",
-      provider: text ? "gemini" : undefined,
-      model: text ? model : undefined,
+      source: parsedResult.parsed ? "llm" : "local-fallback",
+      provider: parsedResult.parsed ? "gemini" : undefined,
+      model: parsedResult.parsed ? model : undefined,
       reason: text ? parsedResult.reason : "Gemini returned an empty explanation.",
     });
   } catch (error) {
