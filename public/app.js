@@ -89,6 +89,27 @@ function computeScreening(summary, checklist) {
   };
 }
 
+function preventionRecommendationsFor(factors = []) {
+  const recommendationMap = {
+    "Smoking history": "avoid smoking exposure and seek support from a health worker if quitting is needed",
+    "Binge drinking": "limit alcohol intake and avoid binge drinking patterns",
+    "Lack of exercise": "add regular physical activity that fits the user's capacity",
+    "Unhealthy diet": "choose more balanced meals with less salty, fatty, or highly processed food",
+    Overweight: "work toward gradual weight management through food choices and movement",
+    Obesity: "ask a health worker for weight-management guidance and follow-up screening",
+  };
+
+  const recommendations = factors
+    .map((factor) => recommendationMap[factor])
+    .filter(Boolean);
+
+  if (recommendations.length === 0) {
+    return "continue healthy habits and consider routine blood pressure screening when available";
+  }
+
+  return recommendations.join("; ");
+}
+
 function renderMetrics(summary) {
   metricsGrid.innerHTML = FACTORS.map(([, label, column]) => {
     const key = column.replace("regional_", "").replace("_rate", "");
@@ -120,6 +141,7 @@ function renderResult(summary, checklist, result) {
     checklistInterpretation: `The user's checklist record includes ${selectedFactors}.`,
     riskReasoning: `The checklist result places the user in the ${result.category.toLowerCase()} screening-support category with a score of ${percent(result.score)}.`,
     awarenessMessage: "This result is not a diagnosis and may be used to support early awareness and follow-up screening.",
+    preventionRecommendations: `For the selected factors, the user may consider these prevention steps: ${preventionRecommendationsFor(checklist.names)}.`,
     regionalContext: `The dataset for ${summary.area} is used only as background context and shows strongest regional factors of ${topFactors}.`,
     professionalNote: "Health professionals may review this result together with direct measurements such as blood pressure when available.",
   });
@@ -132,6 +154,7 @@ function renderLlmSections(sections = {}) {
     ["Checklist Interpretation", sections.checklistInterpretation],
     ["Risk Reasoning Support", sections.riskReasoning],
     ["Health Awareness Message", sections.awarenessMessage],
+    ["Prevention Recommendations", sections.preventionRecommendations],
     ["Regional Context Summary", sections.regionalContext],
     ["Professional Screening Note", sections.professionalNote],
   ];

@@ -4,9 +4,31 @@ function percent(value) {
   return `${Math.round(Number(value || 0) * 100)}%`;
 }
 
+function preventionRecommendationsFor(factors = []) {
+  const recommendationMap = {
+    "Smoking history": "avoid smoking exposure and seek support from a health worker if quitting is needed",
+    "Binge drinking": "limit alcohol intake and avoid binge drinking patterns",
+    "Lack of exercise": "add regular physical activity that fits the user's capacity",
+    "Unhealthy diet": "choose more balanced meals with less salty, fatty, or highly processed food",
+    Overweight: "work toward gradual weight management through food choices and movement",
+    Obesity: "ask a health worker for weight-management guidance and follow-up screening",
+  };
+
+  const recommendations = factors
+    .map((factor) => recommendationMap[factor])
+    .filter(Boolean);
+
+  if (recommendations.length === 0) {
+    return "continue healthy habits and consider routine blood pressure screening when available";
+  }
+
+  return recommendations.join("; ");
+}
+
 function fallbackSections(payload) {
-  const selectedFactors = payload.checklist?.selectedFactors?.length
-    ? payload.checklist.selectedFactors.join(", ")
+  const selectedFactorList = payload.checklist?.selectedFactors || [];
+  const selectedFactors = selectedFactorList.length
+    ? selectedFactorList.join(", ")
     : "no checklist risk factors selected";
   const topFactors = payload.topRegionalFactors?.length
     ? payload.topRegionalFactors
@@ -18,6 +40,7 @@ function fallbackSections(payload) {
     checklistInterpretation: `The user's checklist record includes ${selectedFactors}.`,
     riskReasoning: `The checklist result places the user in the ${String(payload.riskCategory).toLowerCase()} screening-support category with a score of ${percent(payload.score)}.`,
     awarenessMessage: "This result is not a diagnosis and may be used to support early awareness and follow-up screening.",
+    preventionRecommendations: `For the selected factors, the user may consider these prevention steps: ${preventionRecommendationsFor(selectedFactorList)}.`,
     regionalContext: `As added background only, the dataset for ${payload.area} shows a ${percent(payload.regionalRiskScore)} regional risk-factor indicator, with strongest recorded factors of ${topFactors}.`,
     professionalNote: "Health professionals may review this checklist result with direct measurements such as blood pressure when available, while using regional records only as community-level context.",
   };
@@ -28,6 +51,7 @@ function sectionsToExplanation(sections) {
     sections.checklistInterpretation,
     sections.riskReasoning,
     sections.awarenessMessage,
+    sections.preventionRecommendations,
     sections.regionalContext,
     sections.professionalNote,
   ].filter(Boolean).join(" ");
@@ -39,10 +63,11 @@ You are the LLM component of HyperDect, a prototype hypertension screening-suppo
 
 HyperDect is for health awareness and screening support only. It must not diagnose, treat, or replace advice from a licensed health professional.
 
-Return exactly five labeled lines using this format:
+Return exactly six labeled lines using this format:
 CHECKLIST_INTERPRETATION: one brief sentence
 RISK_REASONING: one brief sentence
 AWARENESS_MESSAGE: one brief sentence
+PREVENTION_RECOMMENDATIONS: one brief sentence with practical prevention recommendations for the selected checklist factors
 REGIONAL_CONTEXT: one brief sentence
 PROFESSIONAL_NOTE: one brief sentence
 
@@ -52,6 +77,7 @@ Do not say the user has hypertension.
 The user's screening score must be explained as based on the user's own checklist record.
 The regional dataset must be described only as added background/context about recorded community-level risk-factor patterns.
 Do not imply that the selected region determines whether the user has hypertension.
+Base the prevention recommendations on the selected checklist factors only.
 
 Input:
 - Region: ${payload.area}
@@ -88,11 +114,12 @@ function parseLabeledSections(text) {
     CHECKLIST_INTERPRETATION: "checklistInterpretation",
     RISK_REASONING: "riskReasoning",
     AWARENESS_MESSAGE: "awarenessMessage",
+    PREVENTION_RECOMMENDATIONS: "preventionRecommendations",
     REGIONAL_CONTEXT: "regionalContext",
     PROFESSIONAL_NOTE: "professionalNote",
   };
   const sections = {};
-  const pattern = /(CHECKLIST_INTERPRETATION|RISK_REASONING|AWARENESS_MESSAGE|REGIONAL_CONTEXT|PROFESSIONAL_NOTE)\s*:\s*/g;
+  const pattern = /(CHECKLIST_INTERPRETATION|RISK_REASONING|AWARENESS_MESSAGE|PREVENTION_RECOMMENDATIONS|REGIONAL_CONTEXT|PROFESSIONAL_NOTE)\s*:\s*/g;
   const matches = [...text.matchAll(pattern)];
 
   for (let index = 0; index < matches.length; index += 1) {
