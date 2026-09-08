@@ -61,33 +61,58 @@
           <p id="risk-explanation">
             HyperDect uses the user's checklist record for the screening score, while regional records provide added background context for health professionals.
           </p>
-          <div class="llm-grid" id="llm-grid"></div>
+          <div class="action-row">
+            <button type="button" class="secondary-button" data-modal-target="llm-modal">View LLM Support</button>
+            <button type="button" class="secondary-button" data-modal-target="regional-modal">View Regional Context</button>
+            <button type="button" class="secondary-button" data-modal-target="evaluation-modal">View Model Evaluation</button>
+          </div>
         </div>
-
-        <div class="metrics-grid" id="metrics-grid"></div>
 
         <p class="medical-note">
           HyperDect is for screening support and health awareness only. It does not diagnose, treat, or replace advice from a licensed health professional.
         </p>
       </section>
-
-      <section class="evaluation-panel" aria-labelledby="evaluation-title">
-        <div class="evaluation-heading">
-          <div>
-            <p class="eyebrow">Random Forest Framework</p>
-            <h2 id="evaluation-title">Model Evaluation</h2>
-          </div>
-          <span id="evaluation-status">Loading</span>
-        </div>
-
-        <div class="evaluation-grid" id="evaluation-grid"></div>
-
-        <div class="matrix-wrap">
-          <h3>Confusion Matrix</h3>
-          <img id="confusion-matrix" alt="Random Forest confusion matrix" src="/data/evaluation/confusion_matrix.png">
-        </div>
-      </section>
     </main>
+
+    <div class="modal-backdrop" id="modal-backdrop" hidden></div>
+
+    <section class="modal" id="llm-modal" role="dialog" aria-modal="true" aria-labelledby="llm-modal-title" hidden>
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Gemini LLM</p>
+          <h2 id="llm-modal-title">Screening Support</h2>
+        </div>
+        <button type="button" class="icon-button" data-modal-close aria-label="Close modal">x</button>
+      </div>
+      <div class="llm-grid" id="llm-grid"></div>
+    </section>
+
+    <section class="modal" id="regional-modal" role="dialog" aria-modal="true" aria-labelledby="regional-modal-title" hidden>
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Background Reference</p>
+          <h2 id="regional-modal-title">Regional Context</h2>
+        </div>
+        <button type="button" class="icon-button" data-modal-close aria-label="Close modal">x</button>
+      </div>
+      <div class="metrics-grid modal-metrics" id="regional-modal-grid"></div>
+    </section>
+
+    <section class="modal wide-modal" id="evaluation-modal" role="dialog" aria-modal="true" aria-labelledby="evaluation-title" hidden>
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">Random Forest Framework</p>
+          <h2 id="evaluation-title">Model Evaluation</h2>
+        </div>
+        <span id="evaluation-status">Loading</span>
+        <button type="button" class="icon-button" data-modal-close aria-label="Close modal">x</button>
+      </div>
+      <div class="evaluation-grid" id="evaluation-grid"></div>
+      <div class="matrix-wrap">
+        <h3>Confusion Matrix</h3>
+        <img id="confusion-matrix" alt="Random Forest confusion matrix" src="/data/evaluation/confusion_matrix.png">
+      </div>
+    </section>
 
     <script src="/app.js" type="module"></script>
   </body>

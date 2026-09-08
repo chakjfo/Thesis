@@ -35,8 +35,7 @@ body {
 }
 
 .screening-panel,
-.results-panel,
-.evaluation-panel {
+.results-panel {
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -49,11 +48,6 @@ body {
 
 .results-panel {
   padding: 28px;
-}
-
-.evaluation-panel {
-  grid-column: 1 / -1;
-  padding: 24px;
 }
 
 .masthead {
@@ -189,6 +183,21 @@ button:hover {
   background: var(--accent-strong);
 }
 
+.secondary-button {
+  width: auto;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.86rem;
+}
+
+.secondary-button:hover {
+  border-color: var(--accent);
+  background: #eef6f4;
+}
+
 .risk-summary {
   display: grid;
   gap: 8px;
@@ -216,6 +225,13 @@ button:hover {
   line-height: 1.55;
 }
 
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -226,7 +242,6 @@ button:hover {
 .llm-grid {
   display: grid;
   gap: 10px;
-  margin-top: 16px;
 }
 
 .llm-card {
@@ -331,6 +346,60 @@ button:hover {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: white;
+}
+
+.modal-open {
+  overflow: hidden;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(23, 32, 42, 0.42);
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 30;
+  width: min(640px, calc(100% - 28px));
+  max-height: min(720px, calc(100vh - 32px));
+  overflow: auto;
+  transform: translate(-50%, -50%);
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 28px 80px rgba(12, 23, 31, 0.28);
+}
+
+.wide-modal {
+  width: min(920px, calc(100% - 28px));
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.icon-button {
+  flex: 0 0 auto;
+  width: 34px;
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.modal-metrics {
+  margin-bottom: 0;
 }
 
 .risk-low {

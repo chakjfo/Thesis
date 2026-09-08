@@ -21,6 +21,8 @@ const riskExplanation = document.querySelector("#risk-explanation");
 const explanationSource = document.querySelector("#explanation-source");
 const llmGrid = document.querySelector("#llm-grid");
 const metricsGrid = document.querySelector("#metrics-grid");
+const regionalModalGrid = document.querySelector("#regional-modal-grid");
+const modalBackdrop = document.querySelector("#modal-backdrop");
 const evaluationStatus = document.querySelector("#evaluation-status");
 const evaluationGrid = document.querySelector("#evaluation-grid");
 
@@ -111,7 +113,7 @@ function preventionRecommendationsFor(factors = []) {
 }
 
 function renderMetrics(summary) {
-  metricsGrid.innerHTML = FACTORS.map(([, label, column]) => {
+  const html = FACTORS.map(([, label, column]) => {
     const key = column.replace("regional_", "").replace("_rate", "");
     const value = summary[key];
     return `
@@ -121,6 +123,11 @@ function renderMetrics(summary) {
       </div>
     `;
   }).join("");
+
+  if (metricsGrid) {
+    metricsGrid.innerHTML = html;
+  }
+  regionalModalGrid.innerHTML = html;
 }
 
 function renderResult(summary, checklist, result) {
@@ -273,6 +280,41 @@ async function loadEvaluation() {
     evaluationGrid.innerHTML = "";
   }
 }
+
+function openModal(modalId) {
+  const modal = document.querySelector(`#${modalId}`);
+  if (!modal) {
+    return;
+  }
+
+  modalBackdrop.hidden = false;
+  modal.hidden = false;
+  document.body.classList.add("modal-open");
+}
+
+function closeModals() {
+  modalBackdrop.hidden = true;
+  document.querySelectorAll(".modal").forEach((modal) => {
+    modal.hidden = true;
+  });
+  document.body.classList.remove("modal-open");
+}
+
+document.querySelectorAll("[data-modal-target]").forEach((button) => {
+  button.addEventListener("click", () => openModal(button.dataset.modalTarget));
+});
+
+document.querySelectorAll("[data-modal-close]").forEach((button) => {
+  button.addEventListener("click", closeModals);
+});
+
+modalBackdrop.addEventListener("click", closeModals);
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeModals();
+  }
+});
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
