@@ -38,13 +38,15 @@ For production:
 vercel --prod
 ```
 
-## Optional Gemini LLM Explanation
+## Optional Gemini LLM Support
 
-The app includes `/api/explain` for the HyperDect LLM explanation component.
-Without an API key, it uses a local plain-English fallback explanation so the
+The app includes `/api/explain` for the HyperDect LLM component. Gemini is used
+for checklist interpretation, risk reasoning support, a health-awareness
+message, regional context summary, and a professional screening note. Without
+an API key, the app uses local fallback text for the same sections so the
 deployment still works.
 
-To enable real Gemini-generated explanations in Vercel, add:
+To enable real Gemini-generated LLM support in Vercel, add:
 
 ```text
 GEMINI_API_KEY=your_gemini_api_key

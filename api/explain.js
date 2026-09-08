@@ -4,7 +4,7 @@ function percent(value) {
   return `${Math.round(Number(value || 0) * 100)}%`;
 }
 
-function fallbackExplanation(payload) {
+function fallbackSections(payload) {
   const selectedFactors = payload.checklist?.selectedFactors?.length
     ? payload.checklist.selectedFactors.join(", ")
     : "no checklist risk factors selected";
@@ -14,29 +14,44 @@ function fallbackExplanation(payload) {
         .join(", ")
     : "the available regional factors";
 
-  return (
-    `The user's checklist record shows ${selectedFactors}, giving a ${String(payload.riskCategory).toLowerCase()} screening-support category. ` +
-    `As added background only, the dataset for ${payload.area} shows a ${percent(payload.regionalRiskScore)} regional risk-factor indicator. ` +
-    `The strongest recorded regional factors are ${topFactors}. ` +
-    "This regional information helps health professionals understand the community context, but the user's screening score is based on the user's own checklist record. " +
-    "This is not a diagnosis. It is meant to support early awareness and encourage follow-up with a health worker or licensed clinician."
-  );
+  return {
+    checklistInterpretation: `The user's checklist record includes ${selectedFactors}.`,
+    riskReasoning: `The checklist result places the user in the ${String(payload.riskCategory).toLowerCase()} screening-support category with a score of ${percent(payload.score)}.`,
+    awarenessMessage: "This result is not a diagnosis and may be used to support early awareness and follow-up screening.",
+    regionalContext: `As added background only, the dataset for ${payload.area} shows a ${percent(payload.regionalRiskScore)} regional risk-factor indicator, with strongest recorded factors of ${topFactors}.`,
+    professionalNote: "Health professionals may review this checklist result with direct measurements such as blood pressure when available, while using regional records only as community-level context.",
+  };
+}
+
+function sectionsToExplanation(sections) {
+  return [
+    sections.checklistInterpretation,
+    sections.riskReasoning,
+    sections.awarenessMessage,
+    sections.regionalContext,
+    sections.professionalNote,
+  ].filter(Boolean).join(" ");
 }
 
 function buildPrompt(payload) {
   return `
-You are the explanation component of HyperDect, a prototype hypertension screening-support system.
+You are the LLM component of HyperDect, a prototype hypertension screening-support system.
 
 HyperDect is for health awareness and screening support only. It must not diagnose, treat, or replace advice from a licensed health professional.
 
-Write one short plain-English paragraph for the user.
-Keep it brief: 3 to 5 sentences only.
+Return only valid JSON with these exact keys:
+- checklistInterpretation
+- riskReasoning
+- awarenessMessage
+- regionalContext
+- professionalNote
+
+Each value must be 1 brief sentence.
 Use careful wording such as "may indicate", "screening-support result", and "consider consulting a health worker".
 Do not say the user has hypertension.
 The user's screening score must be explained as based on the user's own checklist record.
 The regional dataset must be described only as added background/context about recorded community-level risk-factor patterns.
 Do not imply that the selected region determines whether the user has hypertension.
-Use the dataset details below, especially the strongest regional factors, as contextual information for health professionals.
 
 Input:
 - Region: ${payload.area}
@@ -61,6 +76,23 @@ Regional factor rates:
 `.trim();
 }
 
+function parseGeminiSections(text) {
+  const cleaned = text
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/```$/i, "")
+    .trim();
+  const parsed = JSON.parse(cleaned);
+
+  return {
+    checklistInterpretation: String(parsed.checklistInterpretation || "").trim(),
+    riskReasoning: String(parsed.riskReasoning || "").trim(),
+    awarenessMessage: String(parsed.awarenessMessage || "").trim(),
+    regionalContext: String(parsed.regionalContext || "").trim(),
+    professionalNote: String(parsed.professionalNote || "").trim(),
+  };
+}
+
 export default async function handler(request, response) {
   if (request.method !== "POST") {
     response.status(405).json({ error: "Method not allowed." });
@@ -70,8 +102,10 @@ export default async function handler(request, response) {
   const payload = request.body || {};
 
   if (!process.env.GEMINI_API_KEY) {
+    const sections = fallbackSections(payload);
     response.status(200).json({
-      explanation: fallbackExplanation(payload),
+      explanation: sectionsToExplanation(sections),
+      sections,
       source: "local-fallback",
       reason: "GEMINI_API_KEY is missing in this deployment.",
     });
@@ -98,16 +132,19 @@ export default async function handler(request, response) {
           },
         ],
         generationConfig: {
-          maxOutputTokens: 180,
+          maxOutputTokens: 320,
           temperature: 0.4,
+          responseMimeType: "application/json",
         },
       }),
     });
 
     if (!geminiResponse.ok) {
       const errorText = await geminiResponse.text();
+      const sections = fallbackSections(payload);
       response.status(200).json({
-        explanation: fallbackExplanation(payload),
+        explanation: sectionsToExplanation(sections),
+        sections,
         source: "local-fallback",
         reason: `Gemini request failed with status ${geminiResponse.status}.`,
         detail: errorText.slice(0, 500),
@@ -116,22 +153,26 @@ export default async function handler(request, response) {
     }
 
     const data = await geminiResponse.json();
-    const explanation = data.candidates?.[0]?.content?.parts
+    const text = data.candidates?.[0]?.content?.parts
       ?.map((part) => part.text)
       .filter(Boolean)
       .join(" ")
       .trim();
+    const sections = text ? parseGeminiSections(text) : fallbackSections(payload);
 
     response.status(200).json({
-      explanation: explanation || fallbackExplanation(payload),
-      source: explanation ? "llm" : "local-fallback",
-      provider: explanation ? "gemini" : undefined,
-      model: explanation ? model : undefined,
-      reason: explanation ? undefined : "Gemini returned an empty explanation.",
+      explanation: sectionsToExplanation(sections),
+      sections,
+      source: text ? "llm" : "local-fallback",
+      provider: text ? "gemini" : undefined,
+      model: text ? model : undefined,
+      reason: text ? undefined : "Gemini returned an empty explanation.",
     });
   } catch (error) {
+    const sections = fallbackSections(payload);
     response.status(200).json({
-      explanation: fallbackExplanation(payload),
+      explanation: sectionsToExplanation(sections),
+      sections,
       source: "local-fallback",
       reason: error.message,
     });

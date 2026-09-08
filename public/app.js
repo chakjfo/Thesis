@@ -19,6 +19,7 @@ const riskCategory = document.querySelector("#risk-category");
 const riskScore = document.querySelector("#risk-score");
 const riskExplanation = document.querySelector("#risk-explanation");
 const explanationSource = document.querySelector("#explanation-source");
+const llmGrid = document.querySelector("#llm-grid");
 const metricsGrid = document.querySelector("#metrics-grid");
 const evaluationStatus = document.querySelector("#evaluation-status");
 const evaluationGrid = document.querySelector("#evaluation-grid");
@@ -115,12 +116,37 @@ function renderResult(summary, checklist, result) {
 
   explanationSource.textContent = "Local fallback";
   riskExplanation.textContent = `The user's checklist record shows ${selectedFactors}, giving a ${result.category.toLowerCase()} screening-support category. As added background only, the dataset for ${summary.area} shows a ${percent(summary.regionalRiskScore)} regional risk-factor indicator, with the strongest recorded factors being ${topFactors}. This regional information helps health professionals understand the community context, but the user's screening score is based on the user's own checklist record.`;
+  renderLlmSections({
+    checklistInterpretation: `The user's checklist record includes ${selectedFactors}.`,
+    riskReasoning: `The checklist result places the user in the ${result.category.toLowerCase()} screening-support category with a score of ${percent(result.score)}.`,
+    awarenessMessage: "This result is not a diagnosis and may be used to support early awareness and follow-up screening.",
+    regionalContext: `The dataset for ${summary.area} is used only as background context and shows strongest regional factors of ${topFactors}.`,
+    professionalNote: "Health professionals may review this result together with direct measurements such as blood pressure when available.",
+  });
 
   renderMetrics(summary);
 }
 
+function renderLlmSections(sections = {}) {
+  const items = [
+    ["Checklist Interpretation", sections.checklistInterpretation],
+    ["Risk Reasoning Support", sections.riskReasoning],
+    ["Health Awareness Message", sections.awarenessMessage],
+    ["Regional Context Summary", sections.regionalContext],
+    ["Professional Screening Note", sections.professionalNote],
+  ];
+
+  llmGrid.innerHTML = items.map(([title, text]) => `
+    <div class="llm-card">
+      <span>${title}</span>
+      <p>${text || "No section generated."}</p>
+    </div>
+  `).join("");
+}
+
 async function renderLlmExplanation(summary, checklist, result) {
   riskExplanation.textContent = "Generating plain-English explanation...";
+  llmGrid.innerHTML = "";
 
   const payload = {
     area: summary.area,
@@ -158,6 +184,7 @@ async function renderLlmExplanation(summary, checklist, result) {
       throw new Error(data.error || "Unable to generate explanation.");
     }
     riskExplanation.textContent = data.explanation;
+    renderLlmSections(data.sections);
     explanationSource.textContent = data.source === "llm" ? "LLM via Gemini" : "Local fallback";
 
     if (data.source !== "llm" && data.reason) {

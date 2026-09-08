@@ -13,5 +13,5 @@ Accuracy: 0.9864
 Precision weighted: 0.9886
 Recall weighted: 0.9864
 F1 weighted: 0.9872
-Training time seconds: 1.6816
+Training time seconds: 1.0631
 

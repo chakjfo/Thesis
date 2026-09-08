@@ -3,7 +3,8 @@
   "precision_weighted": 0.988584377761546,
   "recall_weighted": 0.98635477582846,
   "f1_weighted": 0.9871913010380484,
-  "training_time_seconds": 1.681647899968084,
+  "roc_auc_weighted_ovr": 0.99771966672676,
+  "training_time_seconds": 1.0631277000065893,
   "train_rows": 4102,
   "test_rows": 1026
 }
