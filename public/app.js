@@ -21,6 +21,7 @@ const riskExplanation = document.querySelector("#risk-explanation");
 const explanationSource = document.querySelector("#explanation-source");
 const preventionSummary = document.querySelector("#prevention-summary");
 const regionalSummary = document.querySelector("#regional-summary");
+const llmOverallExplanation = document.querySelector("#llm-overall-explanation");
 const llmGrid = document.querySelector("#llm-grid");
 const metricsGrid = document.querySelector("#metrics-grid");
 const regionalModalGrid = document.querySelector("#regional-modal-grid");
@@ -145,7 +146,9 @@ function renderResult(summary, checklist, result) {
     .join(", ");
 
   explanationSource.textContent = "Local fallback";
-  riskExplanation.textContent = `The user's checklist record shows ${selectedFactors}, giving a ${result.category.toLowerCase()} screening-support category. As added background only, the dataset for ${summary.area} shows a ${percent(summary.regionalRiskScore)} regional risk-factor indicator, with the strongest recorded factors being ${topFactors}. This regional information helps health professionals understand the community context, but the user's screening score is based on the user's own checklist record.`;
+  const fallbackExplanation = `The user's checklist record shows ${selectedFactors}, giving a ${result.category.toLowerCase()} screening-support category. As added background only, the dataset for ${summary.area} shows a ${percent(summary.regionalRiskScore)} regional risk-factor indicator, with the strongest recorded factors being ${topFactors}. This regional information helps health professionals understand the community context, but the user's screening score is based on the user's own checklist record.`;
+  riskExplanation.textContent = `Screening score is based on the user's checklist record. Open LLM Support for the full explanation.`;
+  llmOverallExplanation.textContent = fallbackExplanation;
   preventionSummary.textContent = `For the selected factors, the user may consider these prevention steps: ${preventionRecommendationsFor(checklist.names)}.`;
   regionalSummary.textContent = `${summary.area} is used only as background context. The strongest recorded regional factors are ${topFactors}.`;
   renderLlmSections({
@@ -225,12 +228,13 @@ async function renderLlmExplanation(summary, checklist, result) {
     if (!response.ok) {
       throw new Error(data.error || "Unable to generate explanation.");
     }
-    riskExplanation.textContent = data.explanation;
+    llmOverallExplanation.textContent = data.explanation;
+    riskExplanation.textContent = `Screening score is based on the user's checklist record. Open LLM Support for the full explanation.`;
     renderLlmSections(data.sections);
     explanationSource.textContent = data.source === "llm" ? "LLM via Gemini" : "Local fallback";
 
     if (data.source !== "llm" && data.reason) {
-      riskExplanation.textContent += ` Reason: ${data.reason}`;
+      llmOverallExplanation.textContent += ` Reason: ${data.reason}`;
     }
   } catch (error) {
     explanationSource.textContent = "Local fallback";

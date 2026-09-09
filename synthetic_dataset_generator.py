@@ -74,7 +74,6 @@ CHECKLIST_FACTORS = {
 
 MODEL_FEATURE_COLUMNS = [
     "population_group",
-    "is_synthetic",
     "regional_smoking_history_rate",
     "regional_binge_drinking_rate",
     "regional_insufficient_physical_activity_rate",
@@ -282,18 +281,57 @@ def evaluate_random_forest_model(model_frame: pd.DataFrame) -> dict[str, float]:
         recall_score,
         roc_auc_score,
     )
-    from sklearn.model_selection import train_test_split
+    from sklearn.model_selection import GroupShuffleSplit
 
     data = model_frame.dropna(subset=[MODEL_TARGET_COLUMN]).copy()
-    features = pd.get_dummies(data[MODEL_FEATURE_COLUMNS], columns=["population_group"])
-    target = data[MODEL_TARGET_COLUMN]
+    duplicate_subset = [AREA_COL, YEAR_COL, *MODEL_FEATURE_COLUMNS, MODEL_TARGET_COLUMN]
+    full_exact_duplicate_rows = int(data.duplicated().sum())
+    evaluation_data = data.drop_duplicates(subset=duplicate_subset).reset_index(drop=True)
+    duplicates_removed_for_evaluation = int(len(data) - len(evaluation_data))
 
-    x_train, x_test, y_train, y_test = train_test_split(
-        features,
-        target,
-        test_size=0.20,
-        random_state=RANDOM_SEED,
-        stratify=target,
+    groups = evaluation_data[AREA_COL].astype(str) + " | " + evaluation_data["population_group"].astype(str)
+    splitter = GroupShuffleSplit(n_splits=1, test_size=0.20, random_state=RANDOM_SEED)
+    train_index, test_index = next(splitter.split(evaluation_data, evaluation_data[MODEL_TARGET_COLUMN], groups))
+
+    train_data = evaluation_data.iloc[train_index].copy()
+    test_data = evaluation_data.iloc[test_index].copy()
+    x_train = pd.get_dummies(train_data[MODEL_FEATURE_COLUMNS], columns=["population_group"])
+    x_test = pd.get_dummies(test_data[MODEL_FEATURE_COLUMNS], columns=["population_group"])
+    x_train, x_test = x_train.align(x_test, join="left", axis=1, fill_value=0)
+    y_train = train_data[MODEL_TARGET_COLUMN]
+    y_test = test_data[MODEL_TARGET_COLUMN]
+
+    train_groups = set(groups.iloc[train_index])
+    test_groups = set(groups.iloc[test_index])
+    train_identity = set(map(tuple, train_data[duplicate_subset].astype(str).to_numpy()))
+    test_identity = set(map(tuple, test_data[duplicate_subset].astype(str).to_numpy()))
+    train_feature_target = set(map(tuple, train_data[[*MODEL_FEATURE_COLUMNS, MODEL_TARGET_COLUMN]].astype(str).to_numpy()))
+    test_feature_target = set(map(tuple, test_data[[*MODEL_FEATURE_COLUMNS, MODEL_TARGET_COLUMN]].astype(str).to_numpy()))
+
+    leakage_audit = {
+        "full_dataset_rows": int(len(data)),
+        "full_exact_duplicate_rows": full_exact_duplicate_rows,
+        "evaluation_rows_after_duplicate_removal": int(len(evaluation_data)),
+        "duplicates_removed_before_split": duplicates_removed_for_evaluation,
+        "split_method": "GroupShuffleSplit by Area and population_group",
+        "train_rows": int(len(train_data)),
+        "test_rows": int(len(test_data)),
+        "overlapping_area_population_groups": int(len(train_groups.intersection(test_groups))),
+        "exact_row_overlap_between_train_and_test": int(len(train_identity.intersection(test_identity))),
+        "feature_target_pattern_overlap_between_train_and_test": int(
+            len(train_feature_target.intersection(test_feature_target))
+        ),
+        "uses_training_data_as_testing_data": False,
+        "uses_is_synthetic_as_model_feature": False,
+        "target_derivation_warning": (
+            "screening_risk_category is derived from regional_risk_score, which is derived from the "
+            "regional risk-factor rates used as model features. High scores show that the model learned "
+            "the prototype screening rule; they do not prove clinical prediction accuracy."
+        ),
+    }
+    (EVALUATION_OUTPUT_DIR / "leakage_audit.json").write_text(
+        json.dumps(leakage_audit, indent=2),
+        encoding="utf-8",
     )
 
     model = RandomForestClassifier(
@@ -309,14 +347,17 @@ def evaluate_random_forest_model(model_frame: pd.DataFrame) -> dict[str, float]:
 
     predictions = model.predict(x_test)
     probabilities = model.predict_proba(x_test)
-    labels = sorted(target.unique())
-    roc_auc_weighted_ovr = roc_auc_score(
-        y_test,
-        probabilities,
-        labels=model.classes_,
-        multi_class="ovr",
-        average="weighted",
-    )
+    labels = sorted(evaluation_data[MODEL_TARGET_COLUMN].unique())
+    try:
+        roc_auc_weighted_ovr = roc_auc_score(
+            y_test,
+            probabilities,
+            labels=model.classes_,
+            multi_class="ovr",
+            average="weighted",
+        )
+    except ValueError:
+        roc_auc_weighted_ovr = None
 
     metrics = {
         "accuracy": accuracy_score(y_test, predictions),
@@ -327,6 +368,7 @@ def evaluate_random_forest_model(model_frame: pd.DataFrame) -> dict[str, float]:
         "training_time_seconds": training_seconds,
         "train_rows": int(len(x_train)),
         "test_rows": int(len(x_test)),
+        "evaluation_rows": int(len(evaluation_data)),
     }
 
     (EVALUATION_OUTPUT_DIR / "random_forest_metrics.json").write_text(
@@ -372,11 +414,15 @@ def evaluate_random_forest_model(model_frame: pd.DataFrame) -> dict[str, float]:
     plt.close(figure)
 
     importances = pd.DataFrame({
-        "feature": features.columns,
+        "feature": x_train.columns,
         "importance": model.feature_importances_,
     }).sort_values("importance", ascending=False)
     importances.to_csv(EVALUATION_OUTPUT_DIR / "feature_importance.csv", index=False)
-    write_model_evaluation_tables(metrics, report_table, matrix_table, importances)
+    audit_table = pd.DataFrame(
+        [{"Check": key, "Result": value} for key, value in leakage_audit.items()]
+    )
+    audit_table.to_csv(EVALUATION_OUTPUT_DIR / "leakage_audit.csv", index=False)
+    write_model_evaluation_tables(metrics, report_table, matrix_table, importances, audit_table)
 
     return metrics
 
@@ -386,12 +432,18 @@ def write_model_evaluation_tables(
     report_table: pd.DataFrame,
     matrix_table: pd.DataFrame,
     importances: pd.DataFrame,
+    audit_table: pd.DataFrame,
 ) -> None:
     """Create a thesis-friendly Markdown report that opens directly in VS Code."""
     report_display = report_table.copy().round(4)
     matrix_display = matrix_table.copy()
     importance_display = importances.head(10).copy()
     importance_display["importance"] = importance_display["importance"].round(4)
+    roc_auc_display = (
+        f"{metrics['roc_auc_weighted_ovr']:.4f}"
+        if metrics["roc_auc_weighted_ovr"] is not None
+        else "Not available"
+    )
 
     markdown = f"""# HyperDect Random Forest Model Evaluation Tables
 
@@ -399,10 +451,10 @@ def write_model_evaluation_tables(
 
 | Item | Value |
 |---|---:|
-| Total records | {metrics["train_rows"] + metrics["test_rows"]:,} |
+| Total records used for evaluation | {metrics["evaluation_rows"]:,} |
 | Training records | {metrics["train_rows"]:,} |
 | Testing records | {metrics["test_rows"]:,} |
-| Split ratio | 80% training / 20% testing |
+| Split method | Group split by region and population group |
 
 ## Summary Metrics
 
@@ -412,8 +464,12 @@ def write_model_evaluation_tables(
 | Weighted Precision | sum(Precision_i x Support_i) / Total support | {metrics["precision_weighted"]:.4f} |
 | Weighted Recall | sum(Recall_i x Support_i) / Total support | {metrics["recall_weighted"]:.4f} |
 | Weighted F1 Score | sum(F1_i x Support_i) / Total support | {metrics["f1_weighted"]:.4f} |
-| Weighted ROC-AUC OvR | Weighted average of one-vs-rest AUC scores | {metrics["roc_auc_weighted_ovr"]:.4f} |
+| Weighted ROC-AUC OvR | Weighted average of one-vs-rest AUC scores | {roc_auc_display} |
 | Training Time | End time - Start time | {metrics["training_time_seconds"]:.4f} seconds |
+
+## Leakage And Validity Audit
+
+{dataframe_to_markdown(audit_table, include_index=False)}
 
 ## Classification Report
 
@@ -429,13 +485,15 @@ def write_model_evaluation_tables(
 
 ## Notes
 
-The confusion matrix is based only on the 20% test set. In this run, the test
-set contains {metrics["test_rows"]:,} records. The model was trained on the
-remaining {metrics["train_rows"]:,} records.
+The confusion matrix is based only on the test set. In this run, the test set
+contains {metrics["test_rows"]:,} records. The model was trained on the remaining
+{metrics["train_rows"]:,} records.
 
 These results are based on syntheticized regional risk-factor data and a derived
-screening risk category. They are useful for prototype evaluation, but they are
-not clinical validation using real individual patient diagnosis outcomes.
+screening risk category. Because the target category is created from the same
+regional risk-factor rates used as model inputs, high accuracy means the Random
+Forest learned the prototype screening rule. It should not be described as
+clinical validation using real individual patient diagnosis outcomes.
 """
 
     (EVALUATION_OUTPUT_DIR / "MODEL_EVALUATION_TABLES.md").write_text(markdown, encoding="utf-8")
@@ -535,11 +593,14 @@ def sync_public_modeling_outputs() -> None:
         "confusion_matrix.csv",
         "confusion_matrix.png",
         "feature_importance.csv",
+        "leakage_audit.csv",
+        "leakage_audit.json",
         "MODEL_EVALUATION_TABLES.md",
     ]:
         source = EVALUATION_OUTPUT_DIR / file_name
         if source.exists():
             shutil.copy2(source, PUBLIC_EVALUATION_DIR / file_name)
+            shutil.copy2(source, Path(file_name))
 
 
 def sheet_with_metadata(metadata: pd.DataFrame, data: pd.DataFrame) -> pd.DataFrame:

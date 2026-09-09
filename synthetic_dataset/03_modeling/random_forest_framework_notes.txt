@@ -9,9 +9,9 @@ The evaluation files are saved in the evaluation folder.
 
 Rows: 5128
 Columns: 12
-Accuracy: 0.9864
-Precision weighted: 0.9886
-Recall weighted: 0.9864
-F1 weighted: 0.9872
-Training time seconds: 1.0631
+Accuracy: 0.9895
+Precision weighted: 0.9910
+Recall weighted: 0.9895
+F1 weighted: 0.9901
+Training time seconds: 1.1442
 

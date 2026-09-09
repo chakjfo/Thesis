@@ -356,6 +356,29 @@ button:hover {
   gap: 10px;
 }
 
+.llm-overview {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 12px;
+  padding: 13px;
+  border: 1px solid rgba(15, 118, 110, 0.28);
+  border-radius: 8px;
+  background: var(--accent-soft);
+}
+
+.llm-overview span {
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.llm-overview p {
+  margin: 0;
+  color: var(--ink);
+  line-height: 1.5;
+  font-size: 0.94rem;
+}
+
 .llm-card,
 .metric,
 .evaluation-metric {

@@ -1,0 +1,15 @@
+{
+  "full_dataset_rows": 5128,
+  "full_exact_duplicate_rows": 103,
+  "evaluation_rows_after_duplicate_removal": 5005,
+  "duplicates_removed_before_split": 123,
+  "split_method": "GroupShuffleSplit by Area and population_group",
+  "train_rows": 3957,
+  "test_rows": 1048,
+  "overlapping_area_population_groups": 0,
+  "exact_row_overlap_between_train_and_test": 0,
+  "feature_target_pattern_overlap_between_train_and_test": 16,
+  "uses_training_data_as_testing_data": false,
+  "uses_is_synthetic_as_model_feature": false,
+  "target_derivation_warning": "screening_risk_category is derived from regional_risk_score, which is derived from the regional risk-factor rates used as model features. High scores show that the model learned the prototype screening rule; they do not prove clinical prediction accuracy."
+}
